@@ -1,8 +1,8 @@
 {
-  "name": "vape-neon",
+  "name": "mounji-vape",
   "version": "1.0.0",
   "type": "module",
-  "description": "VΛPΞ NΞON — Premium Vape Store",
+  "description": "Mounji Vape — Premium Vape Store",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

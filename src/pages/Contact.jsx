@@ -82,8 +82,8 @@ export default function Contact() {
 
             <div className="contact__sidebar">
               {[
-                { icon: '📍', title: 'Visit Us', lines: ['123 Neon Boulevard', 'Los Angeles, CA 90028'] },
-                { icon: '✉️', title: 'Email Us', lines: ['hello@vapeneon.com', 'support@vapeneon.com'] },
+                { icon: '📍', title: 'Visit Us', lines: ['123 Mounji Boulevard', 'Los Angeles, CA 90028'] },
+                { icon: '✉️', title: 'Email Us', lines: ['hello@mounjivape.com', 'support@mounjivape.com'] },
                 { icon: '📞', title: 'Call Us', lines: ['+1 (555) 123-4567', 'Mon-Fri, 9am-6pm PST'] },
                 { icon: '💬', title: 'Live Chat', lines: ['Available 24/7', 'Average reply: 2 min'] },
               ].map((info, i) => (

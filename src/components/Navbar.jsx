@@ -41,9 +41,8 @@ export default function Navbar() {
         <Link to="/" className="navbar__logo">
           <span className="navbar__logo-icon">◈</span>
           <span className="navbar__logo-text">
-            V<span className="navbar__logo-accent">Λ</span>PΞ
+            Mounji <span className="navbar__logo-accent">Vape</span>
           </span>
-          <span className="navbar__logo-sub">NΞON</span>
         </Link>
 
         <div className={`navbar__links ${mobileOpen ? 'navbar__links--open' : ''}`}>

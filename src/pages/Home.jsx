@@ -98,7 +98,7 @@ export default function Home() {
             <div className="hero__visual-device">
               <div className="hero__device-body">
                 <div className="hero__device-screen">
-                  <span>NΞON</span>
+                  <span>MOUNJI</span>
                 </div>
                 <div className="hero__device-vapor">
                   {[...Array(6)].map((_, i) => (
@@ -155,7 +155,7 @@ export default function Home() {
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
             <span className="section-label" style={{ justifyContent: 'center' }}>Why Choose Us</span>
-            <h2 className="section-title">The <span className="gradient-text">NΞON</span> Difference</h2>
+            <h2 className="section-title">The <span className="gradient-text">Mounji Vape</span> Difference</h2>
           </div>
           <div className="features__grid">
             {[
@@ -199,7 +199,7 @@ export default function Home() {
           <div className="cta__inner">
             <span className="section-label">Limited Time Offer</span>
             <h2 className="section-title">Get <span className="gradient-text">20% Off</span> Your First Order</h2>
-            <p className="cta__desc">Use code <strong>NEON20</strong> at checkout. New customers only.</p>
+            <p className="cta__desc">Use code <strong>MOUNJI20</strong> at checkout. New customers only.</p>
             <Link to="/shop" className="btn-primary" style={{ marginTop: '1rem' }}>
               <span>Shop Now</span>
               <span>→</span>
