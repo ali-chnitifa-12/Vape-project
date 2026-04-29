@@ -1,0 +1,22 @@
+{
+  "name": "vape-neon",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "VΛPΞ NΞON — Premium Vape Store",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "gsap": "^3.12.5",
+    "@gsap/react": "^2.1.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.8"
+  }
+}
