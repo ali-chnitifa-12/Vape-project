@@ -46,7 +46,7 @@ export default function SmokeAnimation({ onComplete }) {
       });
 
       // Logo entrance
-      timeline.fromTo('.smoke-intro-logo', {
+      timeline.fromTo('.smoke-intro-logo-img', {
         opacity: 0,
         scale: 0.8,
         filter: 'blur(15px)'
@@ -57,7 +57,7 @@ export default function SmokeAnimation({ onComplete }) {
         duration: 1.5,
         ease: 'power3.out',
       }, 0.5)
-      .to('.smoke-intro-logo', {
+      .to('.smoke-intro-logo-img', {
         opacity: 0,
         scale: 1.2,
         filter: 'blur(20px)',
@@ -100,7 +100,7 @@ export default function SmokeAnimation({ onComplete }) {
           <div key={i} className={`smoke-particle realistic-color-${i % 3}`}></div>
         ))}
       </div>
-      <div className="smoke-intro-logo">KLAWDZ</div>
+      <img src="/logo.png" alt="Klawdz Logo" className="smoke-intro-logo-img" />
     </div>
   );
 }

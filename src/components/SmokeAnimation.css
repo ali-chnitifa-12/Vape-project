@@ -47,22 +47,18 @@
   background: radial-gradient(circle, rgba(0, 151, 178, 0.5) 0%, transparent 70%);
 }
 
-.smoke-intro-logo {
+.smoke-intro-logo-img {
   position: relative;
   z-index: 10;
-  font-family: var(--font-display);
-  font-size: 10vw;
-  color: var(--white);
-  letter-spacing: 0.5vw;
-  text-shadow: 
-    0 0 40px rgba(209, 17, 29, 0.9),
-    0 0 80px rgba(209, 17, 29, 0.6);
+  width: 40vw;
+  max-width: 600px;
+  filter: drop-shadow(0 0 20px rgba(209, 17, 29, 0.5));
   will-change: transform, opacity, filter;
 }
 
 @media (max-width: 768px) {
-  .smoke-intro-logo {
-    font-size: 15vw;
+  .smoke-intro-logo-img {
+    width: 60vw;
   }
 }
 

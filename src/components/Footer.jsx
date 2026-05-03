@@ -9,8 +9,7 @@ export default function Footer() {
         <div className="footer__grid">
           <div className="footer__brand">
             <div className="footer__logo">
-              <span className="footer__logo-icon">◈</span>
-              <span className="footer__logo-text">Klawdz</span>
+              <img src="/logo.png" alt="Klawdz Logo" className="footer__logo-img" />
             </div>
             <p className="footer__desc">
               Premium vaping products crafted for those who demand excellence. 

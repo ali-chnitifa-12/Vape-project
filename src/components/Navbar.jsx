@@ -38,11 +38,7 @@ export default function Navbar() {
   return (
     <nav ref={navRef} className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}>
       <div className="container navbar__inner">
-        <Link to="/" className="navbar__logo">
-          <span className="navbar__logo-icon">◈</span>
-          <span className="navbar__logo-text">
-            Klawdz
-          </span>
+            <img src="/logo.png" alt="Klawdz Logo" className="navbar__logo-img" />
         </Link>
 
         <div className={`navbar__links ${mobileOpen ? 'navbar__links--open' : ''}`}>
