@@ -1,14 +1,25 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
-import products from '../data/products'
+import toast from 'react-hot-toast'
 import './Cart.css'
 
 export default function Cart() {
-  const [cartItems, setCartItems] = useState([
-    { ...products[0], qty: 1 },
-    { ...products[1], qty: 2 },
-  ])
+  const [cartItems, setCartItems] = useState([])
+  const [customer, setCustomer] = useState({ name: '', email: '', phone: '' })
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/products')
+      .then(res => res.json())
+      .then(data => {
+        if (data.length > 0) {
+          // Initialize with some dummy items for demo purposes if cart is empty
+          const demoItems = data.slice(0, 2).map((p, i) => ({ ...p, qty: i + 1 }));
+          setCartItems(demoItems);
+        }
+      })
+      .catch(err => console.error("Error loading products", err));
+  }, [])
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -31,13 +42,50 @@ export default function Cart() {
     const el = document.querySelector(`[data-cart-id="${id}"]`)
     gsap.to(el, {
       opacity: 0, x: -50, height: 0, padding: 0, margin: 0, duration: 0.4,
-      onComplete: () => setCartItems((prev) => prev.filter((item) => item.id !== id)),
+      onComplete: () => {
+        setCartItems((prev) => prev.filter((item) => item.id !== id))
+        toast.success('Item removed from cart')
+      },
     })
   }
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0)
   const shipping = subtotal > 50 ? 0 : 9.99
   const total = subtotal + shipping
+
+  const handleCheckout = async () => {
+    if (!customer.name || !customer.email) {
+      toast.error('Please provide your name and email')
+      return
+    }
+
+    const toastId = toast.loading('Redirecting to CMI Gateway...')
+
+    try {
+      // Simulate CMI Redirect/Response
+      const res = await fetch('http://localhost:5000/api/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          cartItems, 
+          customer,
+          total: total.toFixed(2)
+        })
+      });
+      
+      if (res.ok) {
+        toast.success('Payment Successful via CMI!', { id: toastId })
+        setCartItems([]);
+        setCustomer({ name: '', email: '', phone: '' })
+      } else {
+        const err = await res.json();
+        toast.error("Checkout failed: " + err.message, { id: toastId });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Checkout error", { id: toastId });
+    }
+  };
 
   return (
     <div className="page-wrapper">
@@ -99,6 +147,30 @@ export default function Cart() {
 
               <div className="cart__summary glass-card">
                 <h3 className="cart__summary-title">Order Summary</h3>
+                
+                <div className="cart__customer-form" style={{ marginBottom: '1.5rem' }}>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ fontSize: '0.8rem', color: 'var(--grey)', display: 'block', marginBottom: '0.4rem' }}>Full Name</label>
+                    <input 
+                      type="text" 
+                      className="input-field" 
+                      value={customer.name}
+                      onChange={(e) => setCustomer({...customer, name: e.target.value})}
+                      placeholder="John Doe" 
+                    />
+                  </div>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ fontSize: '0.8rem', color: 'var(--grey)', display: 'block', marginBottom: '0.4rem' }}>Email Address</label>
+                    <input 
+                      type="email" 
+                      className="input-field" 
+                      value={customer.email}
+                      onChange={(e) => setCustomer({...customer, email: e.target.value})}
+                      placeholder="john@example.com" 
+                    />
+                  </div>
+                </div>
+
                 <div className="cart__summary-row">
                   <span>Subtotal</span>
                   <span>${subtotal.toFixed(2)}</span>
@@ -107,24 +179,19 @@ export default function Cart() {
                   <span>Shipping</span>
                   <span>{shipping === 0 ? <span style={{ color: 'var(--cyan)' }}>FREE</span> : `$${shipping}`}</span>
                 </div>
-                {shipping === 0 && (
-                  <div className="cart__free-shipping">
-                    ✓ You qualify for free shipping!
-                  </div>
-                )}
+                
                 <div className="cart__summary-divider" />
                 <div className="cart__summary-row cart__summary-total">
                   <span>Total</span>
                   <span className="gradient-text">${total.toFixed(2)}</span>
                 </div>
 
-                <div className="cart__promo">
-                  <input type="text" className="input-field" placeholder="Promo code" />
-                  <button className="btn-outline">Apply</button>
+                <div className="cart__cmi-notice" style={{ fontSize: '0.75rem', color: 'var(--grey)', margin: '1rem 0', textAlign: 'center' }}>
+                  🔒 Secure checkout via <strong>CMI Interbank</strong>
                 </div>
 
-                <button className="btn-primary cart__checkout">
-                  <span>Proceed to Checkout</span><span>→</span>
+                <button className="btn-primary cart__checkout" onClick={handleCheckout}>
+                  <span>Pay with CMI</span><span>→</span>
                 </button>
                 <Link to="/shop" className="cart__continue">← Continue Shopping</Link>
               </div>

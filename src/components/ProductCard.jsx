@@ -41,7 +41,11 @@ export default function ProductCard({ product, index }) {
     <Link to={`/product/${product.id}`} className="product-card glass-card" ref={cardRef}>
       <div className="product-card__glow" style={{ background: product.color }} />
       <div className="product-card__badge">
-        <span className={`badge ${badgeClass}`}>{product.badge}</span>
+        {product.outOfStock ? (
+          <span className="badge badge-sale" style={{ background: 'var(--pink)' }}>Out of Stock</span>
+        ) : (
+          <span className={`badge ${badgeClass}`}>{product.badge}</span>
+        )}
       </div>
       <div className="product-card__image">
         <div className="product-card__image-bg" style={{ background: `radial-gradient(circle, ${product.color}22, transparent)` }} />
@@ -57,7 +61,9 @@ export default function ProductCard({ product, index }) {
               <span className="product-card__price-original">${product.originalPrice}</span>
             )}
           </div>
-          <div className="stars">{'★'.repeat(product.rating)}{'☆'.repeat(5 - product.rating)}</div>
+          <div className="product-card__stock" style={{ fontSize: '0.75rem', color: product.outOfStock ? 'var(--pink)' : 'var(--cyan)' }}>
+            {product.outOfStock ? '0 in stock' : `${product.stock} in stock`}
+          </div>
         </div>
       </div>
     </Link>

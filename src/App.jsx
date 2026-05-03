@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
+import { Toaster } from 'react-hot-toast'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Navbar from './components/Navbar'
@@ -11,6 +12,7 @@ import Product from './pages/Product'
 import About from './pages/About'
 import Contact from './pages/Contact'
 import Cart from './pages/Cart'
+import Admin from './pages/Admin'
 import AgeVerification from './components/AgeVerification'
 import SmokeAnimation from './components/SmokeAnimation'
 
@@ -76,6 +78,17 @@ export default function App() {
       
       <div style={{ opacity: isAgeVerified ? 1 : 0, pointerEvents: isAgeVerified ? 'auto' : 'none' }}>
         <PageTransition>
+          <Toaster 
+            position="top-right" 
+            toastOptions={{
+              style: {
+                background: '#1a1a1a',
+                color: '#fff',
+                border: '1px solid #333',
+                fontFamily: 'var(--font-main)'
+              }
+            }} 
+          />
           <Navbar />
           <Routes>
             <Route path="/" element={<Home />} />
@@ -84,6 +97,7 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/admin" element={<Admin />} />
           </Routes>
           <Footer />
         </PageTransition>

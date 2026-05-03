@@ -1,18 +1,25 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import ProductCard from '../components/ProductCard'
-import products from '../data/products'
 import './Home.css'
 
 gsap.registerPlugin(ScrollTrigger)
 
 export default function Home() {
+  const [products, setProducts] = useState([])
   const heroRef = useRef(null)
   const featuredRef = useRef(null)
   const statsRef = useRef(null)
   const ctaRef = useRef(null)
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/products')
+      .then(res => res.json())
+      .then(data => setProducts(data))
+      .catch(err => console.error("Error fetching", err))
+  }, [])
 
   useEffect(() => {
     const ctx = gsap.context(() => {

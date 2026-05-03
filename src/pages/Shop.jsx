@@ -2,22 +2,49 @@ import { useState, useEffect } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import ProductCard from '../components/ProductCard'
-import products, { categories } from '../data/products'
+import { categories } from '../data/products'
 import './Shop.css'
 
 gsap.registerPlugin(ScrollTrigger)
 
 export default function Shop() {
   const [active, setActive] = useState('All')
-  const [filtered, setFiltered] = useState(products)
+  const [search, setSearch] = useState('')
+  const [priceRange, setPriceRange] = useState(500)
+  const [products, setProducts] = useState([])
+  const [filtered, setFiltered] = useState([])
 
   useEffect(() => {
-    if (active === 'All') {
-      setFiltered(products)
-    } else {
-      setFiltered(products.filter((p) => p.category === active))
+    fetch('http://localhost:5000/api/products')
+      .then(res => res.json())
+      .then(data => {
+        setProducts(data)
+        setFiltered(data)
+      })
+      .catch(err => console.error("Error fetching", err))
+  }, [])
+
+  useEffect(() => {
+    let result = products
+
+    // Category filter
+    if (active !== 'All') {
+      result = result.filter((p) => p.category === active)
     }
-  }, [active])
+
+    // Search filter
+    if (search) {
+      result = result.filter((p) => 
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.category.toLowerCase().includes(search.toLowerCase())
+      )
+    }
+
+    // Price filter
+    result = result.filter((p) => p.price <= priceRange)
+
+    setFiltered(result)
+  }, [active, search, priceRange, products])
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -48,20 +75,52 @@ export default function Shop() {
 
       <section className="section-sm">
         <div className="container">
-          <div className="shop__filters">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                className={`shop__filter-btn ${active === cat ? 'shop__filter-btn--active' : ''}`}
-                onClick={() => setActive(cat)}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+          <div className="shop__controls">
+            <div className="shop__filters-group">
+              <div className="shop__filters">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    className={`shop__filter-btn ${active === cat ? 'shop__filter-btn--active' : ''}`}
+                    onClick={() => setActive(cat)}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+              <div className="shop__count">
+                Showing <strong>{filtered.length}</strong> product{filtered.length !== 1 && 's'}
+              </div>
+            </div>
 
-          <div className="shop__count">
-            Showing <strong>{filtered.length}</strong> product{filtered.length !== 1 && 's'}
+            <div className="shop__search-group">
+              <div className="shop__search">
+                <span className="shop__search-icon">🔍</span>
+                <input 
+                  type="text" 
+                  placeholder="Search products..." 
+                  className="input-field"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              
+              <div className="shop__price-filter">
+                <div className="shop__price-label">
+                  <span>Price Range</span>
+                  <span>Up to ${priceRange}</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="500" 
+                  step="10"
+                  className="shop__price-slider"
+                  value={priceRange}
+                  onChange={(e) => setPriceRange(parseInt(e.target.value))}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="shop__grid">
@@ -72,7 +131,7 @@ export default function Shop() {
 
           {filtered.length === 0 && (
             <div className="shop__empty">
-              <p>No products found in this category.</p>
+              <p>No products found matching your criteria.</p>
             </div>
           )}
         </div>
