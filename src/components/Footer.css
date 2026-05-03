@@ -35,6 +35,12 @@
   gap: 0.5rem;
 }
 
+.footer__logo-img {
+  width: 180px;
+  height: auto;
+  filter: drop-shadow(0 0 10px rgba(209, 17, 29, 0.3));
+}
+
 .footer__logo-icon {
   font-size: 1.3rem;
   color: var(--cyan);
