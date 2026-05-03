@@ -3,63 +3,66 @@
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  background-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  perspective: 1000px;
 }
 
-.smoke-layer {
+.smoke-background {
   position: absolute;
-  width: 100vw;
-  height: 100vh;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0;
-  transform: scale(1);
-  filter: blur(10px) contrast(1.2);
+  inset: 0;
+  background-color: var(--bg-primary);
+  opacity: 0.8;
+  z-index: 1;
+}
+
+.smoke-particle {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  filter: blur(60px);
   mix-blend-mode: screen;
+  z-index: 2;
+  will-change: transform, opacity, filter;
 }
 
-.layer-1 {
-  background-image: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.4) 0%, transparent 50%);
+.color-0 {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
 }
 
-.layer-2 {
-  background-image: radial-gradient(circle at 70% 40%, rgba(209,17,29,0.3) 0%, transparent 60%);
+.color-1 {
+  background: radial-gradient(circle, rgba(209, 17, 29, 0.6) 0%, transparent 70%);
 }
 
-.layer-3 {
-  background-image: radial-gradient(circle at 50% 60%, rgba(255,255,255,0.5) 0%, transparent 60%);
+.color-2 {
+  background: radial-gradient(circle, rgba(0, 151, 178, 0.6) 0%, transparent 70%);
 }
 
-.layer-4 {
-  background-image: radial-gradient(circle at 50% 50%, rgba(0,151,178,0.2) 0%, transparent 70%);
+.color-3 {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, transparent 70%);
 }
 
 .smoke-intro-logo {
   position: relative;
   z-index: 10;
   font-family: var(--font-display);
-  font-size: 8rem;
+  font-size: 12vw;
   color: var(--white);
-  letter-spacing: 5px;
-  text-shadow: 0 0 30px rgba(209,17,29,0.8);
-  opacity: 0;
-  animation: logoFadeInOut 3s ease-in-out forwards;
-}
-
-@keyframes logoFadeInOut {
-  0% { opacity: 0; transform: scale(0.9); filter: blur(10px); }
-  30% { opacity: 1; transform: scale(1); filter: blur(0px); }
-  70% { opacity: 1; transform: scale(1); filter: blur(0px); }
-  100% { opacity: 0; transform: scale(1.1); filter: blur(10px); }
+  letter-spacing: 1vw;
+  text-shadow: 
+    0 0 40px rgba(209, 17, 29, 0.9),
+    0 0 80px rgba(209, 17, 29, 0.6),
+    0 0 120px rgba(0, 151, 178, 0.4);
+  will-change: transform, opacity, filter;
 }
 
 @media (max-width: 768px) {
   .smoke-intro-logo {
-    font-size: 4rem;
+    font-size: 18vw;
+    letter-spacing: 2vw;
   }
 }
+
