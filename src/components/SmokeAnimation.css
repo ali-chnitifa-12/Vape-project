@@ -50,15 +50,18 @@
 .smoke-intro-logo-img {
   position: relative;
   z-index: 10;
-  width: 40vw;
-  max-width: 600px;
+  width: 30vw;
+  max-width: 400px;
+  max-height: 30vh;
+  object-fit: contain;
   filter: drop-shadow(0 0 20px rgba(209, 17, 29, 0.5));
   will-change: transform, opacity, filter;
 }
 
 @media (max-width: 768px) {
   .smoke-intro-logo-img {
-    width: 60vw;
+    width: 50vw;
+    max-width: 250px;
   }
 }
 

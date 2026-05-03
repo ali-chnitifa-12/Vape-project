@@ -28,6 +28,11 @@
   text-decoration: none;
 }
 
+.navbar__logo-img {
+  height: 24px;
+  width: auto;
+}
+
 .navbar__logo-icon {
   font-size: 1.5rem;
   color: var(--cyan);
