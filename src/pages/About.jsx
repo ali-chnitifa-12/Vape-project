@@ -44,7 +44,7 @@ export default function About() {
       <section className="about__hero">
         <div className="container">
           <span className="section-label">Our Story</span>
-          <h1 className="section-title">We Are <span className="gradient-text">Mounji Vape</span></h1>
+          <h1 className="section-title">We Are <span className="gradient-text">Klawdz</span></h1>
           <p className="about__hero-desc">
             Born from a passion for innovation and a commitment to quality, we're redefining the vaping experience for a new generation.
           </p>
@@ -67,7 +67,7 @@ export default function About() {
               <span className="section-label">The Beginning</span>
               <h2 className="section-title">From Passion to <span className="gradient-text">Purpose</span></h2>
               <p className="about__text">
-                Mounji Vape started in a small workshop with a simple mission: create vaping products that truly deliver on their promises. We were tired of overpriced, underperforming products flooding the market.
+                Klawdz started in a small workshop with a simple mission: create vaping products that truly deliver on their promises. We were tired of overpriced, underperforming products flooding the market.
               </p>
               <p className="about__text">
                 Today, we've grown into one of the most trusted names in premium vaping. Every product in our collection is rigorously tested, beautifully designed, and backed by our commitment to your satisfaction.
@@ -149,7 +149,7 @@ export default function About() {
       <section className="section">
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-            <span className="section-label" style={{ justifyContent: 'center' }}>The People Behind Mounji Vape</span>
+            <span className="section-label" style={{ justifyContent: 'center' }}>The People Behind Klawdz</span>
             <h2 className="section-title">Meet the <span className="gradient-text">Team</span></h2>
           </div>
           <div className="about__team-grid">

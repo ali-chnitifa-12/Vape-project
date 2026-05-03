@@ -3,21 +3,21 @@
    ============================================ */
 
 :root {
-  --bg-primary: #0a0a14;
-  --bg-secondary: #131326;
+  --bg-primary: #000000;
+  --bg-secondary: #0f0f0f;
   --bg-card: rgba(255, 255, 255, 0.05);
-  --purple: #9d00ff;
-  --purple-light: #c85eff;
-  --cyan: #00f0ff;
-  --pink: #ff0055;
+  --purple: #d1111d;
+  --purple-light: #ff1a1a;
+  --cyan: #ffffff;
+  --pink: #0097b2;
   --yellow: #ffea00;
   --white: #ffffff;
   --grey: #a0a0c0;
-  --border: rgba(157, 0, 255, 0.25);
-  --glow-purple: 0 0 40px rgba(157, 0, 255, 0.5);
-  --glow-cyan: 0 0 40px rgba(0, 240, 255, 0.5);
-  --glow-pink: 0 0 40px rgba(255, 0, 85, 0.5);
-  --font-display: 'Orbitron', monospace;
+  --border: rgba(209, 17, 29, 0.25);
+  --glow-purple: 0 0 40px rgba(209, 17, 29, 0.5);
+  --glow-cyan: 0 0 40px rgba(255, 255, 255, 0.3);
+  --glow-pink: 0 0 40px rgba(0, 151, 178, 0.5);
+  --font-display: 'Tan Nimbus', 'Bebas Neue', sans-serif;
   --font-body: 'Space Grotesk', sans-serif;
   --font-light: 'Inter', sans-serif;
   --radius: 16px;

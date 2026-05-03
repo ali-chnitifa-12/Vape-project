@@ -10,7 +10,7 @@ export default function Footer() {
           <div className="footer__brand">
             <div className="footer__logo">
               <span className="footer__logo-icon">◈</span>
-              <span className="footer__logo-text">Mounji <span>Vape</span></span>
+              <span className="footer__logo-text">Klawdz</span>
             </div>
             <p className="footer__desc">
               Premium vaping products crafted for those who demand excellence. 
@@ -63,7 +63,7 @@ export default function Footer() {
         </div>
 
         <div className="footer__bottom">
-          <p>© 2026 Mounji Vape. All rights reserved.</p>
+          <p>© 2026 Klawdz. All rights reserved.</p>
           <div className="footer__bottom-links">
             <a href="#">Privacy</a>
             <a href="#">Terms</a>

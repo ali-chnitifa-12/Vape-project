@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Navbar from './components/Navbar'
@@ -11,6 +11,9 @@ import Product from './pages/Product'
 import About from './pages/About'
 import Contact from './pages/Contact'
 import Cart from './pages/Cart'
+import AgeVerification from './components/AgeVerification'
+import SmokeAnimation from './components/SmokeAnimation'
+
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -40,7 +43,7 @@ function PageTransition({ children }) {
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'linear-gradient(135deg, #7B2FFF, #00D4FF)',
+          background: 'linear-gradient(135deg, #d1111d, #0097b2)',
           zIndex: 9999,
           transformOrigin: 'top',
           pointerEvents: 'none',
@@ -52,21 +55,37 @@ function PageTransition({ children }) {
 }
 
 export default function App() {
+  const [isAgeVerified, setIsAgeVerified] = useState(() => {
+    return localStorage.getItem('klawdz_age_verified') === 'true';
+  });
+  const [showSmoke, setShowSmoke] = useState(false);
+
+  const handleAgeVerified = () => {
+    setIsAgeVerified(true);
+    setShowSmoke(true);
+  };
+
   return (
     <BrowserRouter>
       <CustomCursor />
-      <PageTransition>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/product/:id" element={<Product />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/cart" element={<Cart />} />
-        </Routes>
-        <Footer />
-      </PageTransition>
+      
+      {!isAgeVerified && <AgeVerification onVerified={handleAgeVerified} />}
+      {showSmoke && <SmokeAnimation onComplete={() => setShowSmoke(false)} />}
+      
+      <div style={{ opacity: isAgeVerified ? 1 : 0, pointerEvents: isAgeVerified ? 'auto' : 'none' }}>
+        <PageTransition>
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/product/:id" element={<Product />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/cart" element={<Cart />} />
+          </Routes>
+          <Footer />
+        </PageTransition>
+      </div>
     </BrowserRouter>
   )
 }
