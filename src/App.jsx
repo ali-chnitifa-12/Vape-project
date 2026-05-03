@@ -72,7 +72,7 @@ export default function App() {
       <CustomCursor />
       
       {!isAgeVerified && <AgeVerification onVerified={handleAgeVerified} />}
-      {showSmoke && <SmokeAnimation onComplete={() => {}} />}
+      {showSmoke && <SmokeAnimation onComplete={() => setShowSmoke(false)} />}
       
       <div style={{ opacity: isAgeVerified ? 1 : 0, pointerEvents: isAgeVerified ? 'auto' : 'none' }}>
         <PageTransition>
