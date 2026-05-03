@@ -58,7 +58,9 @@ export default function App() {
   const [isAgeVerified, setIsAgeVerified] = useState(() => {
     return localStorage.getItem('klawdz_age_verified') === 'true';
   });
-  const [showSmoke, setShowSmoke] = useState(false);
+  const [showSmoke, setShowSmoke] = useState(() => {
+    return localStorage.getItem('klawdz_age_verified') === 'true';
+  });
 
   const handleAgeVerified = () => {
     setIsAgeVerified(true);
@@ -70,7 +72,7 @@ export default function App() {
       <CustomCursor />
       
       {!isAgeVerified && <AgeVerification onVerified={handleAgeVerified} />}
-      {showSmoke && <SmokeAnimation onComplete={() => setShowSmoke(false)} />}
+      {showSmoke && <SmokeAnimation onComplete={() => {}} />}
       
       <div style={{ opacity: isAgeVerified ? 1 : 0, pointerEvents: isAgeVerified ? 'auto' : 'none' }}>
         <PageTransition>
