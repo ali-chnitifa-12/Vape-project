@@ -38,15 +38,36 @@ export default function Admin() {
   });
 
   /* ── auth ──────────────────────────────────────────────── */
-  const handleLogin = (e) => {
+  const getAuthHeaders = () => ({
+    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+  });
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    setIsAuthenticated(false);
+    toast('Logged out');
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (password === 'admin123') {
-      setIsAuthenticated(true);
-      fetchProducts();
-      fetchOrders();
-      toast.success('Welcome back, Admin 👋');
-    } else {
-      toast.error('Incorrect password');
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      if (res.ok) {
+        const { token } = await res.json();
+        localStorage.setItem('adminToken', token);
+        setIsAuthenticated(true);
+        fetchProducts();
+        fetchOrders();
+        toast.success('Welcome back, Admin 👋');
+      } else {
+        toast.error('Incorrect password');
+      }
+    } catch (err) {
+      toast.error('Network error');
     }
   };
 
@@ -72,11 +93,21 @@ export default function Admin() {
 
   const fetchOrders = async () => {
     try {
-      const res  = await fetch('/api/orders');
+      const res  = await fetch('/api/orders', { headers: getAuthHeaders() });
+      if (res.status === 401 || res.status === 403) return handleLogout();
       const data = await res.json();
       setOrders(data.sort((a, b) => b.id - a.id));
     } catch (err) { console.error(err); }
   };
+
+  // Check token on mount
+  useEffect(() => {
+    if (localStorage.getItem('adminToken')) {
+      setIsAuthenticated(true);
+      fetchProducts();
+      fetchOrders();
+    }
+  }, []);
 
   // auto-refresh every 60 s
   useEffect(() => {
@@ -172,7 +203,8 @@ export default function Admin() {
   /* ── product CRUD ──────────────────────────────────────── */
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this product?')) return;
-    await fetch(`/api/products/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/products/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+    if (res.status === 401 || res.status === 403) return handleLogout();
     toast.success('Product deleted');
     fetchProducts();
   };
@@ -200,7 +232,11 @@ export default function Admin() {
     try {
       const method = editingId ? 'PUT' : 'POST';
       const url    = editingId ? `/api/products/${editingId}` : `/api/products`;
-      const res    = await fetch(url, { method, body: data });
+      const res    = await fetch(url, { method, body: data, headers: getAuthHeaders() });
+      if (res.status === 401 || res.status === 403) {
+        toast.dismiss(tId);
+        return handleLogout();
+      }
       if (!res.ok) throw new Error((await res.json()).message);
       toast.success(editingId ? 'Updated' : 'Added', { id: tId });
       handleCancelEdit();
@@ -268,7 +304,10 @@ export default function Admin() {
       <div className="container">
 
         <div className="admin-header">
-          <h1 className="admin-page__title">Admin <span className="gradient-text">Dashboard</span></h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <h1 className="admin-page__title">Admin <span className="gradient-text">Dashboard</span></h1>
+            <button onClick={handleLogout} className="btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}>Logout</button>
+          </div>
           <div className="admin-tabs">
             {[
               { key: 'analytics', label: '📊 Analytics' },
