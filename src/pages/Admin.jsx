@@ -210,6 +210,42 @@ export default function Admin() {
     }
   };
 
+  /* ── drag-and-drop layout handlers ────────────────────────── */
+  const handleDragStart = (idx) => {
+    setDraggingIdx(idx);
+    setLayoutSaved(false);
+  };
+
+  const handleDragEnter = (idx) => setDragOverIdx(idx);
+
+  const handleDrop = (dropIdx) => {
+    if (draggingIdx === null || draggingIdx === dropIdx) return;
+    const next = [...layoutItems];
+    const [moved] = next.splice(draggingIdx, 1);
+    next.splice(dropIdx, 0, moved);
+    setLayoutItems(next);
+    setDraggingIdx(null);
+    setDragOverIdx(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingIdx(null);
+    setDragOverIdx(null);
+  };
+
+  const handleSaveLayout = () => {
+    saveProductOrder(layoutItems.map(p => p.id));
+    setLayoutSaved(true);
+    toast.success('✅ Product order saved! Home & Shop updated.');
+  };
+
+  const handleResetLayout = () => {
+    setLayoutItems(products);
+    saveProductOrder(products.map(p => p.id));
+    setLayoutSaved(false);
+    toast('🔄 Order reset to default');
+  };
+
   /* ── login gate ─────────────────────────────────────────── */
   if (!isAuthenticated) {
     return (

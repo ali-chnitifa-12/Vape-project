@@ -319,6 +319,85 @@ app.post('/api/payment/simulate-confirm/:orderId', async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════
+// COD ORDERS — log when customer submits WhatsApp form
+// ═══════════════════════════════════════════════════════════
+
+app.post('/api/orders/cod', async (req, res) => {
+  const { cartItems, customer, total, codInfo } = req.body;
+  // cartItems: [{id, name, price, qty, category}]
+  // customer:  {name, email}
+  // codInfo:   {name, phone, city, zip, address}
+  // total:     number
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    const orderId = Date.now();
+    const custName  = codInfo?.name  || customer?.name  || 'Guest';
+    const custEmail = codInfo?.phone || customer?.email || '';
+
+    // Insert order
+    await conn.execute(
+      `INSERT INTO orders (id, customerName, customerEmail, total, status)
+       VALUES (?, ?, ?, ?, ?)`,
+      [orderId, custName, custEmail, parseFloat(total), 'COD - Pending']
+    );
+
+    // Insert order items
+    for (const item of cartItems) {
+      await conn.execute(
+        'INSERT INTO order_items (orderId, productId, name, price, qty) VALUES (?, ?, ?, ?, ?)',
+        [orderId, item.id, item.name, item.price, item.qty]
+      );
+    }
+
+    // Deduct stock for each item
+    for (const item of cartItems) {
+      await conn.execute(
+        `UPDATE products
+         SET stock      = GREATEST(stock - ?, 0),
+             outOfStock = IF(stock - ? <= 0, 1, 0)
+         WHERE id = ?`,
+        [item.qty, item.qty, item.productId || item.id]
+      );
+    }
+
+    await conn.commit();
+    conn.release();
+
+    console.log(`[COD] Order #${orderId} logged — ${custName} — ${total} MAD`);
+    res.status(201).json({ orderId, message: 'COD order logged' });
+  } catch (err) {
+    await conn.rollback();
+    conn.release();
+    console.error('[COD] Error logging order:', err.message);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// PROMO CODES
+// ═══════════════════════════════════════════════════════════
+
+// Simple in-memory promo codes — add/edit as needed
+const PROMO_CODES = {
+  'KLAWDZ20': { type: 'percent', value: 20, label: '20% off' },
+  'VAPE10':   { type: 'percent', value: 10, label: '10% off' },
+  'FREE50':   { type: 'fixed',   value: 50, label: '50 MAD off' },
+  'WELCOME':  { type: 'percent', value: 15, label: '15% off' },
+};
+
+app.get('/api/promo/:code', (req, res) => {
+  const code  = req.params.code.toUpperCase().trim();
+  const promo = PROMO_CODES[code];
+  if (!promo) {
+    return res.status(404).json({ valid: false, message: 'Code invalide ou expiré' });
+  }
+  res.json({ valid: true, code, ...promo });
+});
+
+// ═══════════════════════════════════════════════════════════
 // ORDERS
 // ═══════════════════════════════════════════════════════════
 

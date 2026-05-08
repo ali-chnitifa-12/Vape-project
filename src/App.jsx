@@ -16,6 +16,7 @@ import Admin from './pages/Admin'
 import OrderConfirm from './pages/OrderConfirm'
 import AgeVerification from './components/AgeVerification'
 import SmokeAnimation from './components/SmokeAnimation'
+import WhatsAppBubble from './components/WhatsAppBubble'
 
 
 gsap.registerPlugin(ScrollTrigger)
@@ -90,6 +91,7 @@ export default function App() {
               }
             }} 
           />
+          <WhatsAppBubble />
           <Navbar />
           <Routes>
             <Route path="/" element={<Home />} />

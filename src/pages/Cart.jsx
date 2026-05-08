@@ -16,7 +16,12 @@ export default function Cart() {
 
   // COD state
   const [showCodModal, setShowCodModal] = useState(false)
-  const [codForm, setCodForm]     = useState({ name: '', phone: '', city: '', address: '' })
+  const [codForm, setCodForm]     = useState({ name: '', phone: '', city: '', zip: '', address: '' })
+
+  // Promo code state
+  const [promoInput,   setPromoInput]   = useState('')
+  const [promo,        setPromo]        = useState(null)  // { code, type, value, label }
+  const [promoLoading, setPromoLoading] = useState(false)
 
   // Load cart from localStorage
   useEffect(() => {
@@ -59,7 +64,12 @@ export default function Cart() {
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0)
   const shipping  = subtotal > 50 ? 0 : 9.99
-  const total     = subtotal + shipping
+  const discount  = promo
+    ? promo.type === 'percent'
+      ? subtotal * (promo.value / 100)
+      : Math.min(promo.value, subtotal)
+    : 0
+  const total = subtotal + shipping - discount
 
   // ── STEP 1: Validate and create PENDING order ──────────────────
   const handleCheckout = async () => {
@@ -141,14 +151,53 @@ export default function Cart() {
   const formatExpiry = (val) =>
     val.replace(/\D/g, '').slice(0, 4).replace(/(\d{2})(\d)/, '$1/$2')
 
-  // ── COD: open WhatsApp with order info ────────────────────────
+  // ── Promo code ────────────────────────────────────────────
+  const handlePromoApply = async () => {
+    const code = promoInput.trim().toUpperCase()
+    if (!code) return
+    setPromoLoading(true)
+    try {
+      const res  = await fetch(`/api/promo/${code}`)
+      const data = await res.json()
+      if (!res.ok || !data.valid) {
+        toast.error(data.message || 'Code invalide')
+        setPromo(null)
+      } else {
+        setPromo(data)
+        toast.success(`✅ Code appliqué : ${data.label}`)
+      }
+    } catch {
+      toast.error('Erreur réseau')
+    } finally {
+      setPromoLoading(false)
+    }
+  }
+
+  // ── COD: log to backend then open WhatsApp ────────────────
   const WHATSAPP_NUMBER = '212691522871'
 
-  const handleCodSubmit = (e) => {
+  const handleCodSubmit = async (e) => {
     e.preventDefault()
+
+    // 1. Log the order to DB
+    try {
+      await fetch('/api/orders/cod', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cartItems,
+          customer,
+          total: total.toFixed(2),
+          codInfo: codForm,
+        })
+      })
+    } catch (_) { /* non-blocking — WhatsApp still opens */ }
+
+    // 2. Build WhatsApp message
     const itemLines = cartItems
       .map(i => `  • ${i.name} x${i.qty} — ${(i.price * i.qty).toFixed(2)} MAD`)
       .join('%0A')
+    const discountLine = promo ? `%0A🏷️ *Promo (${promo.code}):* -${discount.toFixed(2)} MAD` : ''
     const msg =
       `🛵 *Nouvelle commande COD*%0A` +
       `───────────────────%0A` +
@@ -160,12 +209,13 @@ export default function Cart() {
       `🛒 *Articles:*%0A${itemLines}%0A` +
       `───────────────────%0A` +
       `💰 *Sous-total:* ${subtotal.toFixed(2)} MAD%0A` +
-      `🚚 *Livraison:* ${shipping === 0 ? 'GRATUITE' : shipping + ' MAD'}%0A` +
+      `🚚 *Livraison:* ${shipping === 0 ? 'GRATUITE' : shipping + ' MAD'}` +
+      discountLine + `%0A` +
       `✅ *TOTAL: ${total.toFixed(2)} MAD*`
 
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank')
     setShowCodModal(false)
-    setCodForm({ name: '', phone: '', city: '', address: '' })
+    setCodForm({ name: '', phone: '', city: '', zip: '', address: '' })
   }
 
   return (
@@ -243,16 +293,45 @@ export default function Cart() {
                 </div>
 
                 <div className="cart__summary-row">
-                  <span>Subtotal</span><span>${subtotal.toFixed(2)}</span>
+                  <span>Subtotal</span><span>{subtotal.toFixed(2)} MAD</span>
                 </div>
                 <div className="cart__summary-row">
                   <span>Shipping</span>
-                  <span>{shipping === 0 ? <span style={{ color: 'var(--cyan)' }}>FREE</span> : `$${shipping}`}</span>
+                  <span>{shipping === 0 ? <span style={{ color: 'var(--cyan)' }}>FREE</span> : `${shipping} MAD`}</span>
                 </div>
+
+                {/* Promo code input */}
+                <div className="cart__promo">
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="Code promo..."
+                    value={promoInput}
+                    onChange={e => { setPromoInput(e.target.value); if (promo) setPromo(null) }}
+                    onKeyDown={e => e.key === 'Enter' && handlePromoApply()}
+                  />
+                  <button className="btn-outline cart__promo-btn" onClick={handlePromoApply} disabled={promoLoading}>
+                    <span>{promoLoading ? '...' : 'Apply'}</span>
+                  </button>
+                </div>
+
+                {promo && (
+                  <div className="cart__promo-badge">
+                    <span>🏷️ {promo.code} — {promo.label}</span>
+                    <button onClick={() => { setPromo(null); setPromoInput('') }}>✕</button>
+                  </div>
+                )}
+
+                {promo && (
+                  <div className="cart__summary-row" style={{ color: '#00e676' }}>
+                    <span>Discount</span><span>-{discount.toFixed(2)} MAD</span>
+                  </div>
+                )}
+
                 <div className="cart__summary-divider" />
                 <div className="cart__summary-row cart__summary-total">
                   <span>Total</span>
-                  <span className="gradient-text">${total.toFixed(2)}</span>
+                  <span className="gradient-text">{total.toFixed(2)} MAD</span>
                 </div>
 
                 <div style={{ fontSize: '0.75rem', color: 'var(--grey)', margin: '1rem 0', textAlign: 'center' }}>
