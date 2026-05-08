@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import ProductCard from '../components/ProductCard'
+import { applySavedOrder } from '../utils/productOrder'
 import './Home.css'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -15,46 +16,39 @@ export default function Home() {
   const ctaRef = useRef(null)
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/products')
+    fetch('/api/products')
       .then(res => res.json())
       .then(data => setProducts(data))
-      .catch(err => console.error("Error fetching", err))
+      .catch(err => console.error('Error fetching products', err))
   }, [])
 
   useEffect(() => {
+    // Suppress GSAP "target not found" warnings for optional elements
+    gsap.config({ nullTargetWarn: false })
+
     const ctx = gsap.context(() => {
       // Hero animations
       const tl = gsap.timeline({ delay: 0.8 })
       tl.fromTo('.hero__label', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6 })
         .fromTo('.hero__title span', { opacity: 0, y: 80, rotateX: 40 }, { opacity: 1, y: 0, rotateX: 0, stagger: 0.12, duration: 0.8, ease: 'power3.out' }, '-=0.3')
-        .fromTo('.hero__desc', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 }, '-=0.3')
+        .fromTo('.hero__desc',    { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 }, '-=0.3')
         .fromTo('.hero__actions', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 }, '-=0.2')
-        .fromTo('.hero__visual', { opacity: 0, scale: 0.8, rotateY: -15 }, { opacity: 1, scale: 1, rotateY: 0, duration: 1, ease: 'power3.out' }, '-=0.5')
-        .fromTo('.hero__stat', { opacity: 0, y: 20 }, { opacity: 1, y: 0, stagger: 0.1, duration: 0.5 }, '-=0.4')
+        .fromTo('.hero__visual',  { opacity: 0, scale: 0.8, rotateY: -15 }, { opacity: 1, scale: 1, rotateY: 0, duration: 1, ease: 'power3.out' }, '-=0.5')
+        .fromTo('.hero__stat',    { opacity: 0, y: 20 }, { opacity: 1, y: 0, stagger: 0.1, duration: 0.5 }, '-=0.4')
 
-      // Featured section scroll animation
+      // Sections scroll animations
       gsap.fromTo('.featured__header > *', { opacity: 0, y: 40 }, {
         opacity: 1, y: 0, stagger: 0.15, duration: 0.7,
         scrollTrigger: { trigger: '.featured__header', start: 'top 80%' },
       })
-      gsap.fromTo('.product-card', { opacity: 0, y: 60 }, {
-        opacity: 1, y: 0, stagger: 0.1, duration: 0.6, ease: 'power2.out',
-        scrollTrigger: { trigger: '.featured__grid', start: 'top 85%' },
-      })
-
-      // Stats
       gsap.fromTo('.stats__item', { opacity: 0, y: 40 }, {
         opacity: 1, y: 0, stagger: 0.1, duration: 0.6,
         scrollTrigger: { trigger: '.stats', start: 'top 80%' },
       })
-
-      // Features
       gsap.fromTo('.feature-card', { opacity: 0, y: 50, scale: 0.95 }, {
         opacity: 1, y: 0, scale: 1, stagger: 0.12, duration: 0.6,
         scrollTrigger: { trigger: '.features__grid', start: 'top 85%' },
       })
-
-      // CTA
       gsap.fromTo('.cta__inner > *', { opacity: 0, y: 30 }, {
         opacity: 1, y: 0, stagger: 0.12, duration: 0.6,
         scrollTrigger: { trigger: '.cta', start: 'top 80%' },
@@ -63,7 +57,16 @@ export default function Home() {
     return () => ctx.revert()
   }, [])
 
-  const featuredProducts = products.slice(0, 4)
+  // Animate product cards only AFTER products have loaded into the DOM
+  useEffect(() => {
+    if (products.length === 0) return
+    gsap.fromTo('.product-card', { opacity: 0, y: 60 }, {
+      opacity: 1, y: 0, stagger: 0.1, duration: 0.6, ease: 'power2.out',
+      scrollTrigger: { trigger: '.featured__grid', start: 'top 85%' },
+    })
+  }, [products])
+
+  const featuredProducts = applySavedOrder(products).slice(0, 4)
 
   return (
     <div className="page-wrapper">

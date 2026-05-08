@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { gsap } from 'gsap'
+import { getCartCount } from '../utils/cart.js'
 import './Navbar.css'
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false)
+  const [scrolled, setScrolled]     = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [cartCount] = useState(0)
+  const [cartCount, setCartCount]   = useState(getCartCount())
   const location = useLocation()
   const navRef = useRef(null)
 
@@ -14,6 +15,13 @@ export default function Navbar() {
     const handleScroll = () => setScrolled(window.scrollY > 50)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Keep badge in sync whenever cart changes
+  useEffect(() => {
+    const onCartUpdate = () => setCartCount(getCartCount())
+    window.addEventListener('cart-updated', onCartUpdate)
+    return () => window.removeEventListener('cart-updated', onCartUpdate)
   }, [])
 
   useEffect(() => {
@@ -39,7 +47,7 @@ export default function Navbar() {
     <nav ref={navRef} className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}>
       <div className="container navbar__inner">
         <Link to="/" className="navbar__logo">
-          <img src="/logo.png" alt="Klawdz Logo" className="navbar__logo-img" />
+          <img src="/logo_transparent.png" alt="Klawdz Logo" className="navbar__logo-img" />
         </Link>
 
         <div className={`navbar__links ${mobileOpen ? 'navbar__links--open' : ''}`}>
@@ -54,7 +62,7 @@ export default function Navbar() {
             </Link>
           ))}
           <Link to="/cart" className="navbar__cart-mobile btn-primary">
-            <span>Cart ({cartCount})</span>
+            <span>Cart {cartCount > 0 ? `(${cartCount})` : ''}</span>
           </Link>
         </div>
 

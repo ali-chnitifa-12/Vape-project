@@ -4,16 +4,18 @@
   "type": "module",
   "description": "Mounji Vape — Premium Vape Store",
   "scripts": {
-    "dev": "concurrently \"nodemon server/index.js\" \"vite\"",
+    "dev": "concurrently \"node server/index.js\" \"vite\"",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "@gsap/react": "^2.1.1",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "gsap": "^3.12.5",
     "multer": "^2.1.1",
+    "mysql2": "^3.22.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.6.0",
@@ -22,6 +24,7 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
     "concurrently": "^9.2.1",
+    "jimp": "^1.6.1",
     "nodemon": "^3.1.14",
     "vite": "^5.4.8"
   }

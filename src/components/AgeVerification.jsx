@@ -49,7 +49,7 @@ export default function AgeVerification({ onVerified }) {
     <div className="age-verification" ref={containerRef}>
       <div className="age-verification__bg"></div>
       <div className="age-verification__content" ref={contentRef}>
-        <img src="/logo.png" alt="Klawdz Logo" className="age-verification__logo-img" />
+        <img src="/logo_transparent.png" alt="Klawdz Logo" className="age-verification__logo-img" />
         {!isRejected ? (
           <>
             <h2 className="age-verification__title">Age Verification</h2>

@@ -3,6 +3,7 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import ProductCard from '../components/ProductCard'
 import { categories } from '../data/products'
+import { applySavedOrder } from '../utils/productOrder'
 import './Shop.css'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -15,11 +16,12 @@ export default function Shop() {
   const [filtered, setFiltered] = useState([])
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/products')
+    fetch('/api/products')
       .then(res => res.json())
       .then(data => {
-        setProducts(data)
-        setFiltered(data)
+        const ordered = applySavedOrder(data)
+        setProducts(ordered)
+        setFiltered(ordered)
       })
       .catch(err => console.error("Error fetching", err))
   }, [])

@@ -263,3 +263,276 @@
     grid-column: 1;
   }
 }
+
+/* ── CMI Payment Modal ─────────────────────────────────── */
+.cmi-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.cmi-modal {
+  width: 100%;
+  max-width: 440px;
+  padding: 2rem;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+.cmi-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.cmi-modal__logo {
+  display: flex;
+  flex-direction: column;
+}
+
+.cmi-modal__logo-text {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #d1111d, #0097b2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cmi-modal__logo-sub {
+  font-size: 0.65rem;
+  color: var(--grey);
+  letter-spacing: 0.05em;
+}
+
+.cmi-modal__secure {
+  font-size: 0.75rem;
+  color: #00e676;
+  background: rgba(0, 230, 118, 0.08);
+  border: 1px solid rgba(0, 230, 118, 0.2);
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+}
+
+.cmi-modal__amount {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--grey);
+  margin-bottom: 1.5rem;
+}
+
+.cmi-modal__amount strong {
+  font-size: 1.4rem;
+  display: block;
+  margin-top: 0.3rem;
+}
+
+/* Card visual preview */
+.cmi-card-preview {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.cmi-card-preview::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(0, 151, 178, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.cmi-card-preview__chip {
+  font-size: 1.2rem;
+  color: #f0d060;
+  letter-spacing: -3px;
+  margin-bottom: 0.8rem;
+}
+
+.cmi-card-preview__number {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  letter-spacing: 0.2em;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.cmi-card-preview__bottom {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-family: 'Courier New', monospace;
+}
+
+.cmi-card-preview__label {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.2rem;
+}
+
+.cmi-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cmi-modal__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.cmi-modal__form .form-group label {
+  font-size: 0.78rem;
+  color: var(--grey);
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+.cmi-modal__form .input-field {
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* ── Payment method selector ───────────────────────────────── */
+.cart__pay-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cart__pay-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--grey);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.cart__pay-divider::before,
+.cart__pay-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* COD button */
+.cart__cod-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.2rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 230, 118, 0.25);
+  background: rgba(0, 230, 118, 0.05);
+  color: var(--white);
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: var(--font-main);
+  text-align: left;
+}
+
+.cart__cod-btn:hover {
+  border-color: rgba(0, 230, 118, 0.5);
+  background: rgba(0, 230, 118, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 230, 118, 0.12);
+}
+
+.cart__cod-btn > span:last-child {
+  margin-left: auto;
+  color: var(--grey);
+}
+
+.cart__cod-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.cart__cod-title {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #00e676;
+}
+
+.cart__cod-sub {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--grey);
+  margin-top: 0.15rem;
+}
+
+/* ── COD Modal extras ─────────────────────────────────────── */
+.cod-modal__title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #00e676;
+}
+
+.cod-modal__textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.cod-modal__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  background: rgba(0, 212, 255, 0.06);
+  border: 1px solid rgba(0, 212, 255, 0.15);
+  font-size: 0.8rem;
+  color: var(--grey);
+  line-height: 1.5;
+}
+
+.cod-modal__notice > span:first-child {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}

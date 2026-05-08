@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import toast from 'react-hot-toast'
 import ProductCard from '../components/ProductCard'
+import { addToCart } from '../utils/cart.js'
 import './Product.css'
 
 export default function Product() {
@@ -17,7 +18,7 @@ export default function Product() {
 
   const fetchReviews = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/reviews/${id}`)
+      const res = await fetch(`/api/reviews/${id}`)
       if (!res.ok) return;
       const contentType = res.headers.get("content-type");
       if (contentType && contentType.indexOf("application/json") !== -1) {
@@ -31,7 +32,7 @@ export default function Product() {
 
   useEffect(() => {
     setLoading(true)
-    fetch('http://localhost:5000/api/products')
+    fetch('/api/products')
       .then(res => res.json())
       .then(data => {
         setProducts(data)
@@ -49,7 +50,7 @@ export default function Product() {
   const handleReviewSubmit = async (e) => {
     e.preventDefault()
     try {
-      const res = await fetch('http://localhost:5000/api/reviews', {
+      const res = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...reviewData, productId: id })
@@ -75,13 +76,10 @@ export default function Product() {
   }, [id, loading, product])
 
   const handleAddToCart = () => {
-    toast.success(`${qty}x ${product.name} added to cart!`, {
+    addToCart(product, qty)
+    toast.success(`${qty}× ${product.name} added to cart!`, {
       icon: '🛒',
-      style: {
-        borderRadius: '10px',
-        background: '#333',
-        color: '#fff',
-      },
+      style: { borderRadius: '10px', background: '#1a1a1a', color: '#fff' },
     })
     setQty(1)
   }

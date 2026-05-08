@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head><title>Remove Logo Background</title></head>
+<body>
+<canvas id="c"></canvas>
+<a id="dl" download="logo_transparent.png">Download Transparent Logo</a>
+<script>
+  const img = new Image()
+  img.src = '/logo.png'
+  img.onload = () => {
+    const canvas = document.getElementById('c')
+    canvas.width  = img.width
+    canvas.height = img.height
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(img, 0, 0)
+
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    const px = data.data
+
+    for (let i = 0; i < px.length; i += 4) {
+      const r = px[i], g = px[i+1], b = px[i+2]
+      // Make near-black pixels transparent
+      if (r < 35 && g < 35 && b < 35) {
+        px[i+3] = 0
+      }
+    }
+
+    ctx.putImageData(data, 0, 0)
+    document.getElementById('dl').href = canvas.toDataURL('image/png')
+    document.getElementById('dl').textContent = '✅ Click here to download logo_transparent.png'
+    document.getElementById('dl').style = 'font-size:20px; display:block; margin:20px'
+  }
+</script>
+</body>
+</html>

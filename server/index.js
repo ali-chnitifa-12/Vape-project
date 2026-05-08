@@ -1,18 +1,22 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import fs from 'fs';
 import path from 'path';
 import multer from 'multer';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
+import pool from './db.js';
+import { buildCmiParams, verifyCmiCallback } from './cmi.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5001;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // needed for CMI callback (form POST)
 
 // Request logger
 app.use((req, res, next) => {
@@ -20,12 +24,14 @@ app.use((req, res, next) => {
   next();
 });
 
+// Serve uploaded images
+app.use('/images', express.static(path.join(__dirname, '..', 'public', 'images')));
+
+// Multer for image uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, '..', 'public', 'images');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
@@ -34,217 +40,360 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-const dataFile = path.join(__dirname, 'data', 'products.json');
-const ordersFile = path.join(__dirname, 'data', 'orders.json');
-const reviewsFile = path.join(__dirname, 'data', 'reviews.json');
-
-// Helper to read data
-const readData = () => {
-  try {
-    const data = fs.readFileSync(dataFile, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error("Error reading data:", error);
-    return [];
-  }
-};
-
-// Helper to write data
-const writeData = (data) => {
-  try {
-    fs.writeFileSync(dataFile, JSON.stringify(data, null, 2), 'utf8');
-  } catch (error) {
-    console.error("Error writing data:", error);
-  }
-};
-
-// Helper to read orders
-const readOrders = () => {
-  try {
-    const data = fs.readFileSync(ordersFile, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-};
-
-// Helper to write orders
-const writeOrders = (data) => {
-  try {
-    fs.writeFileSync(ordersFile, JSON.stringify(data, null, 2), 'utf8');
-  } catch (error) {}
-};
-
-// Helper to read reviews
-const readReviews = () => {
-  try {
-    const data = fs.readFileSync(reviewsFile, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-};
-
-// Helper to write reviews
-const writeReviews = (data) => {
-  try {
-    fs.writeFileSync(reviewsFile, JSON.stringify(data, null, 2), 'utf8');
-  } catch (error) {}
-};
-
-// 1. Get all products
-app.get('/api/products', (req, res) => {
-  const products = readData();
-  res.json(products);
-});
-
-// 2. Add a new product
-app.post('/api/products', upload.single('imageFile'), (req, res) => {
-  const products = readData();
-  const stockVal = parseInt(req.body.stock) || 0;
-  const newProduct = {
-    ...req.body,
-    id: Date.now(), // simple unique id generator
-    price: parseFloat(req.body.price),
-    originalPrice: req.body.originalPrice && req.body.originalPrice !== 'null' ? parseFloat(req.body.originalPrice) : null,
-    stock: stockVal,
-    outOfStock: req.body.outOfStock === 'true' || stockVal <= 0,
-    badge: req.body.badge || 'new',
-    rating: 5,
-    reviews: 0,
-    color: req.body.color || '#00ffaa',
-    description: req.body.description || '',
-    specs: [],
-    flavors: [],
-    image: req.file ? `/images/${req.file.filename}` : '/images/vape_device_1_1777480668776.png'
+// ─────────────────────────────────────────────────────────
+// Helper: format product row from DB
+// ─────────────────────────────────────────────────────────
+function formatProduct(row) {
+  return {
+    ...row,
+    price: parseFloat(row.price),
+    originalPrice: row.originalPrice ? parseFloat(row.originalPrice) : null,
+    outOfStock: row.outOfStock === 1 || row.outOfStock === true,
+    specs:   typeof row.specs   === 'string' ? JSON.parse(row.specs)   : (row.specs   || []),
+    flavors: typeof row.flavors === 'string' ? JSON.parse(row.flavors) : (row.flavors || []),
   };
-  products.push(newProduct);
-  writeData(products);
-  res.status(201).json(newProduct);
-});
+}
 
-// 3. Update a product
-app.put('/api/products/:id', upload.single('imageFile'), (req, res) => {
-  const products = readData();
-  const index = products.findIndex(p => p.id === parseInt(req.params.id));
-  
-  if (index !== -1) {
-    const updatedStock = req.body.stock !== undefined ? parseInt(req.body.stock) : products[index].stock;
-    const updatedOutOfStock = req.body.outOfStock !== undefined ? (req.body.outOfStock === 'true') : (updatedStock <= 0);
+// ═══════════════════════════════════════════════════════════
+// PRODUCTS
+// ═══════════════════════════════════════════════════════════
 
-    const updatedProduct = {
-      ...products[index],
-      ...req.body,
-      price: req.body.price ? parseFloat(req.body.price) : products[index].price,
-      originalPrice: req.body.originalPrice && req.body.originalPrice !== 'null' ? parseFloat(req.body.originalPrice) : null,
-      stock: updatedStock,
-      outOfStock: updatedOutOfStock
-    };
-
-    if (req.file) {
-      updatedProduct.image = `/images/${req.file.filename}`;
-    }
-
-    products[index] = updatedProduct;
-    writeData(products);
-    res.json(products[index]);
-  } else {
-    res.status(404).json({ message: "Product not found" });
+app.get('/api/products', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM products ORDER BY createdAt DESC');
+    res.json(rows.map(formatProduct));
+  } catch (err) {
+    console.error('GET /api/products:', err.message);
+    res.status(500).json({ message: 'Database error', error: err.message });
   }
 });
 
-// 4. Delete a product
-app.delete('/api/products/:id', (req, res) => {
-  const products = readData();
-  const filteredProducts = products.filter(p => p.id !== parseInt(req.params.id));
-  
-  if (products.length !== filteredProducts.length) {
-    writeData(filteredProducts);
-    res.json({ message: "Product deleted" });
-  } else {
-    res.status(404).json({ message: "Product not found" });
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM products WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ message: 'Product not found' });
+    res.json(formatProduct(rows[0]));
+  } catch (err) {
+    res.status(500).json({ message: 'Database error', error: err.message });
   }
 });
 
-// 5. Purchase a product (decrease stock)
-app.post('/api/purchase', (req, res) => {
-  const { cartItems, customer, total } = req.body; 
-  const products = readData();
-  
-  let success = true;
-  let errorMsg = "";
+app.post('/api/products', upload.single('imageFile'), async (req, res) => {
+  try {
+    const { name, category, price, originalPrice, badge, stock, outOfStock, color, description } = req.body;
+    const id = Date.now();
+    const stockVal = parseInt(stock) || 0;
+    const isOut = outOfStock === 'true' || stockVal <= 0 ? 1 : 0;
+    const image = req.file
+      ? `/images/${req.file.filename}`
+      : '/images/vape_device_1_1777480668776.png';
 
-  cartItems.forEach(item => {
-    const index = products.findIndex(p => p.id === parseInt(item.id));
-    if (index !== -1) {
-      if (products[index].stock >= item.qty && !products[index].outOfStock) {
-        products[index].stock -= item.qty;
-        if (products[index].stock <= 0) {
-          products[index].stock = 0;
-          products[index].outOfStock = true;
-        }
-      } else {
-        success = false;
-        errorMsg = `Not enough stock for ${products[index].name}`;
+    await pool.execute(
+      `INSERT INTO products (id, name, category, price, originalPrice, badge, rating, reviews, image, color, description, specs, flavors, stock, outOfStock)
+       VALUES (?, ?, ?, ?, ?, ?, 5, 0, ?, ?, ?, '[]', '[]', ?, ?)`,
+      [id, name, category || 'Device', parseFloat(price) || 0,
+       originalPrice && originalPrice !== 'null' ? parseFloat(originalPrice) : null,
+       badge || 'new', image, color || '#00ffaa', description || '', stockVal, isOut]
+    );
+    const [rows] = await pool.execute('SELECT * FROM products WHERE id = ?', [id]);
+    res.status(201).json(formatProduct(rows[0]));
+  } catch (err) {
+    console.error('POST /api/products:', err.message);
+    res.status(500).json({ message: 'Database error', error: err.message });
+  }
+});
+
+app.put('/api/products/:id', upload.single('imageFile'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [existing] = await pool.execute('SELECT * FROM products WHERE id = ?', [id]);
+    if (existing.length === 0) return res.status(404).json({ message: 'Product not found' });
+    const p = existing[0];
+
+    const { name, category, price, originalPrice, badge, stock, outOfStock, color, description } = req.body;
+    const stockVal  = stock !== undefined ? parseInt(stock) : p.stock;
+    const isOut     = outOfStock !== undefined ? (outOfStock === 'true' ? 1 : 0) : (stockVal <= 0 ? 1 : 0);
+    const image     = req.file ? `/images/${req.file.filename}` : p.image;
+
+    await pool.execute(
+      `UPDATE products SET name=?, category=?, price=?, originalPrice=?, badge=?, image=?, color=?, description=?, stock=?, outOfStock=? WHERE id=?`,
+      [name || p.name, category || p.category,
+       price ? parseFloat(price) : p.price,
+       originalPrice && originalPrice !== 'null' ? parseFloat(originalPrice) : null,
+       badge || p.badge, image, color || p.color,
+       description !== undefined ? description : p.description,
+       stockVal, isOut, id]
+    );
+    const [rows] = await pool.execute('SELECT * FROM products WHERE id = ?', [id]);
+    res.json(formatProduct(rows[0]));
+  } catch (err) {
+    console.error('PUT /api/products:', err.message);
+    res.status(500).json({ message: 'Database error', error: err.message });
+  }
+});
+
+app.delete('/api/products/:id', async (req, res) => {
+  try {
+    const [result] = await pool.execute('DELETE FROM products WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Product not found' });
+    res.json({ message: 'Product deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Database error', error: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// CMI PAYMENT - Morocco
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * STEP 1: Frontend calls this to create the order and get CMI params.
+ * Backend validates stock, saves a PENDING order, returns CMI params.
+ * Frontend then builds a form and auto-submits it to CMI.
+ */
+app.post('/api/payment/initiate', async (req, res) => {
+  const { cartItems, customer, total } = req.body;
+  const conn = await pool.getConnection();
+
+  try {
+    await conn.beginTransaction();
+
+    // Validate stock
+    for (const item of cartItems) {
+      const [rows] = await conn.execute('SELECT * FROM products WHERE id = ?', [item.id]);
+      if (rows.length === 0) throw new Error(`Product not found: ${item.id}`);
+      if (rows[0].stock < item.qty || rows[0].outOfStock) {
+        throw new Error(`Stock insuffisant pour: ${rows[0].name}`);
       }
     }
-  });
 
-  if (success) {
-    writeData(products);
+    // Create PENDING order
+    const orderId = Date.now();
+    await conn.execute(
+      'INSERT INTO orders (id, customerName, customerEmail, total, status) VALUES (?, ?, ?, ?, ?)',
+      [orderId, customer?.name || 'Guest', customer?.email || '', parseFloat(total), 'PENDING']
+    );
 
-    // Save order
-    const orders = readOrders();
-    const newOrder = {
-      id: Date.now(),
-      items: cartItems,
-      customer: customer || { name: 'Guest', email: 'guest@example.com' },
-      total: total,
-      date: new Date().toISOString(),
-      status: 'Paid (CMI)'
-    };
-    orders.push(newOrder);
-    writeOrders(orders);
+    // Save order items
+    for (const item of cartItems) {
+      await conn.execute(
+        'INSERT INTO order_items (orderId, productId, name, price, qty) VALUES (?, ?, ?, ?, ?)',
+        [orderId, item.id, item.name, item.price, item.qty]
+      );
+    }
 
-    res.json({ message: "Purchase successful", products, order: newOrder });
-  } else {
-    res.status(400).json({ message: errorMsg });
+    await conn.commit();
+    conn.release();
+
+    // Check if CMI credentials are configured
+    const cmiReady = process.env.CMI_CLIENT_ID !== 'YOUR_CLIENT_ID_HERE'
+                  && process.env.CMI_STORE_KEY  !== 'YOUR_STORE_KEY_HERE';
+
+    if (!cmiReady) {
+      // ─── SIMULATION MODE (no real CMI credentials yet) ───────────────
+      console.log('[CMI] Running in SIMULATION mode - credentials not set');
+      return res.json({
+        mode: 'simulation',
+        orderId,
+        message: 'CMI credentials not configured. Payment simulated.',
+      });
+    }
+
+    // ─── REAL CMI MODE ────────────────────────────────────────────────
+    const cmiParams = buildCmiParams({
+      orderId,
+      amount:        total,
+      customerEmail: customer?.email || '',
+      customerName:  customer?.name  || '',
+    });
+
+    res.json({
+      mode:       'cmi',
+      orderId,
+      gatewayUrl: process.env.CMI_BASE_URL,
+      params:     cmiParams,
+    });
+
+  } catch (err) {
+    await conn.rollback();
+    conn.release();
+    console.error('Payment initiate error:', err.message);
+    res.status(400).json({ message: err.message });
   }
 });
 
-// 6. Get all orders
-app.get('/api/orders', (req, res) => {
-  const orders = readOrders();
-  res.json(orders);
+/**
+ * STEP 2: CMI calls this URL after payment (server-to-server callback).
+ * We verify the signature, then update stock and order status.
+ * CMI expects us to respond with "ACTION=POSTAUTH" if approved.
+ */
+app.post('/api/payment/callback', async (req, res) => {
+  const params = req.body;
+  console.log('[CMI Callback]', params);
+
+  try {
+    // Verify CMI signature
+    const valid = verifyCmiCallback(params, process.env.CMI_STORE_KEY);
+    if (!valid) {
+      console.error('[CMI] Invalid signature in callback!');
+      return res.send('APPROVED'); // CMI still expects APPROVED response
+    }
+
+    const orderId  = params.oid;
+    const response = params.Response || params.response || '';
+    const approved = response === 'Approved' || response === '00';
+
+    if (approved) {
+      const conn = await pool.getConnection();
+      try {
+        await conn.beginTransaction();
+
+        // Deduct stock
+        const [items] = await conn.execute(
+          'SELECT * FROM order_items WHERE orderId = ?', [orderId]
+        );
+        for (const item of items) {
+          await conn.execute(
+            `UPDATE products
+             SET stock = GREATEST(stock - ?, 0),
+                 outOfStock = IF(stock - ? <= 0, 1, 0)
+             WHERE id = ?`,
+            [item.qty, item.qty, item.productId]
+          );
+        }
+
+        // Mark order as paid
+        await conn.execute(
+          `UPDATE orders SET status = 'Paid (CMI)', authCode = ?, tranId = ? WHERE id = ?`,
+          [params.AUTH_CODE || '', params.TransId || '', orderId]
+        );
+
+        await conn.commit();
+        conn.release();
+        console.log(`[CMI] Order ${orderId} paid successfully`);
+      } catch (err) {
+        await conn.rollback();
+        conn.release();
+        console.error('[CMI] DB error during callback:', err.message);
+      }
+    } else {
+      // Payment rejected — mark order as failed
+      await pool.execute(
+        `UPDATE orders SET status = 'FAILED' WHERE id = ?`,
+        [orderId]
+      );
+      console.log(`[CMI] Order ${orderId} payment failed. Response: ${response}`);
+    }
+
+    // CMI requires this exact response to confirm we received the callback
+    res.send('APPROVED');
+
+  } catch (err) {
+    console.error('[CMI Callback] Error:', err.message);
+    res.send('APPROVED'); // always send APPROVED to avoid CMI retrying forever
+  }
 });
 
-// 7. Reviews
-app.get('/api/reviews/:productId', (req, res) => {
-  const reviews = readReviews();
-  const productReviews = reviews.filter(r => r.productId === parseInt(req.params.productId));
-  res.json(productReviews);
+/**
+ * Simulation-only: mark a PENDING order as paid (used when CMI creds not set)
+ */
+app.post('/api/payment/simulate-confirm/:orderId', async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const [items] = await pool.execute('SELECT * FROM order_items WHERE orderId = ?', [orderId]);
+    for (const item of items) {
+      await pool.execute(
+        `UPDATE products SET stock = GREATEST(stock - ?, 0), outOfStock = IF(stock - ? <= 0, 1, 0) WHERE id = ?`,
+        [item.qty, item.qty, item.productId]
+      );
+    }
+    await pool.execute(
+      `UPDATE orders SET status = 'Paid (CMI - Simulated)' WHERE id = ?`, [orderId]
+    );
+    console.log(`[SIM] Order ${orderId} confirmed as paid`);
+    res.json({ message: 'Order confirmed' });
+  } catch (err) {
+    console.error('simulate-confirm error:', err.message);
+    res.status(500).json({ message: err.message });
+  }
 });
 
-app.post('/api/reviews', (req, res) => {
-  const reviews = readReviews();
-  const { productId, name, rating, comment } = req.body;
-  
-  const newReview = {
-    id: Date.now(),
-    productId: parseInt(productId),
-    name,
-    rating: parseInt(rating),
-    comment,
-    date: new Date().toISOString()
-  };
-  
-  reviews.push(newReview);
-  writeReviews(reviews);
-  
-  // Update product review count/avg in a real app, here we just return
-  res.status(201).json(newReview);
+// ═══════════════════════════════════════════════════════════
+// ORDERS
+// ═══════════════════════════════════════════════════════════
+
+app.get('/api/orders', async (req, res) => {
+  try {
+    const [orders] = await pool.execute('SELECT * FROM orders ORDER BY createdAt DESC');
+    for (const order of orders) {
+      const [items] = await pool.execute(
+        'SELECT * FROM order_items WHERE orderId = ?', [order.id]
+      );
+      order.customer = { name: order.customerName, email: order.customerEmail };
+      order.items    = items;
+      order.date     = order.createdAt;
+      order.total    = parseFloat(order.total);
+    }
+    res.json(orders);
+  } catch (err) {
+    console.error('GET /api/orders:', err.message);
+    res.status(500).json({ message: 'Database error', error: err.message });
+  }
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend Server running on http://localhost:${PORT}`);
+// ═══════════════════════════════════════════════════════════
+// REVIEWS
+// ═══════════════════════════════════════════════════════════
+
+app.get('/api/reviews/:productId', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT * FROM reviews WHERE productId = ? ORDER BY createdAt DESC',
+      [req.params.productId]
+    );
+    res.json(rows.map(r => ({ ...r, date: r.createdAt })));
+  } catch (err) {
+    res.status(500).json({ message: 'Database error', error: err.message });
+  }
 });
+
+app.post('/api/reviews', async (req, res) => {
+  try {
+    const { productId, name, rating, comment } = req.body;
+    const id = Date.now();
+    await pool.execute(
+      'INSERT INTO reviews (id, productId, name, rating, comment) VALUES (?, ?, ?, ?, ?)',
+      [id, parseInt(productId), name, parseInt(rating), comment]
+    );
+    const [rows] = await pool.execute('SELECT * FROM reviews WHERE id = ?', [id]);
+    res.status(201).json({ ...rows[0], date: rows[0].createdAt });
+  } catch (err) {
+    console.error('POST /api/reviews:', err.message);
+    res.status(500).json({ message: 'Database error', error: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// START SERVER
+// ═══════════════════════════════════════════════════════════
+
+async function startServer() {
+  try {
+    const conn = await pool.getConnection();
+    await conn.ping();
+    conn.release();
+
+    app.listen(PORT, () => {
+      console.log(`\n🚀 Server running → http://localhost:${PORT}`);
+      console.log(`🗄️  MySQL database → ${process.env.DB_NAME || 'vape-store'}`);
+
+      const cmiReady = process.env.CMI_CLIENT_ID !== 'YOUR_CLIENT_ID_HERE';
+      console.log(`💳 CMI Gateway    → ${cmiReady ? '✅ CONFIGURED' : '⚠️  SIMULATION MODE (add credentials to .env)'}`);
+    });
+  } catch (err) {
+    console.error('❌ Failed to connect to MySQL:', err.message);
+    process.exit(1);
+  }
+}
+
+startServer();

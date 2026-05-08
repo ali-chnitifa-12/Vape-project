@@ -37,6 +37,8 @@ export default function ProductCard({ product, index }) {
 
   const badgeClass = product.badge === 'new' ? 'badge-new' : product.badge === 'hot' ? 'badge-hot' : 'badge-sale'
 
+  const isLowStock = !product.outOfStock && product.stock > 0 && product.stock <= 5
+
   return (
     <Link to={`/product/${product.id}`} className="product-card glass-card" ref={cardRef}>
       <div className="product-card__glow" style={{ background: product.color }} />
@@ -61,9 +63,17 @@ export default function ProductCard({ product, index }) {
               <span className="product-card__price-original">${product.originalPrice}</span>
             )}
           </div>
-          <div className="product-card__stock" style={{ fontSize: '0.75rem', color: product.outOfStock ? 'var(--pink)' : 'var(--cyan)' }}>
-            {product.outOfStock ? '0 in stock' : `${product.stock} in stock`}
-          </div>
+          {product.outOfStock ? (
+            <span className="product-card__stock-badge product-card__stock-out">Out of Stock</span>
+          ) : isLowStock ? (
+            <span className="product-card__stock-badge product-card__stock-low">
+              🔥 Only {product.stock} left!
+            </span>
+          ) : (
+            <span className="product-card__stock-badge product-card__stock-ok">
+              ✓ In Stock
+            </span>
+          )}
         </div>
       </div>
     </Link>

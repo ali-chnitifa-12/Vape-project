@@ -13,6 +13,7 @@ import About from './pages/About'
 import Contact from './pages/Contact'
 import Cart from './pages/Cart'
 import Admin from './pages/Admin'
+import OrderConfirm from './pages/OrderConfirm'
 import AgeVerification from './components/AgeVerification'
 import SmokeAnimation from './components/SmokeAnimation'
 
@@ -70,7 +71,7 @@ export default function App() {
   };
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <CustomCursor />
       
       {!isAgeVerified && <AgeVerification onVerified={handleAgeVerified} />}
@@ -98,6 +99,9 @@ export default function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/order/:orderId" element={<OrderConfirm />} />
+            <Route path="/payment/success" element={<OrderConfirm />} />
+            <Route path="/payment/fail"    element={<OrderConfirm />} />
           </Routes>
           <Footer />
         </PageTransition>

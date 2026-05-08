@@ -110,3 +110,38 @@
   color: var(--grey);
   text-decoration: line-through;
 }
+
+/* Stock status badges */
+.product-card__stock-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  letter-spacing: 0.03em;
+}
+
+.product-card__stock-ok {
+  color: var(--cyan);
+  background: rgba(0, 212, 255, 0.08);
+  border: 1px solid rgba(0, 212, 255, 0.15);
+}
+
+.product-card__stock-low {
+  color: #ffaa00;
+  background: rgba(255, 170, 0, 0.1);
+  border: 1px solid rgba(255, 170, 0, 0.25);
+  animation: pulse-low 2s ease-in-out infinite;
+}
+
+.product-card__stock-out {
+  color: var(--pink);
+  background: rgba(255, 45, 120, 0.08);
+  border: 1px solid rgba(255, 45, 120, 0.15);
+}
+
+@keyframes pulse-low {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
