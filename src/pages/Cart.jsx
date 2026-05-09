@@ -22,6 +22,7 @@ export default function Cart() {
   const [promoInput,   setPromoInput]   = useState('')
   const [promo,        setPromo]        = useState(null)  // { code, type, value, label }
   const [promoLoading, setPromoLoading] = useState(false)
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
 
   // Load cart from localStorage
   useEffect(() => {
@@ -73,6 +74,10 @@ export default function Cart() {
 
   // ── STEP 1: Validate and create PENDING order ──────────────────
   const handleCheckout = async () => {
+    if (!agreedToTerms) {
+      toast.error('Veuillez accepter les conditions générales de vente.')
+      return
+    }
     if (!customer.name || !customer.email) {
       toast.error('Please fill in your name and email first')
       return
@@ -82,7 +87,7 @@ export default function Cart() {
       const res = await fetch('/api/payment/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cartItems, customer, total: total.toFixed(2) })
+        body: JSON.stringify({ cartItems, customer, promoCode: promo?.code })
       })
       const data = await res.json()
       if (!res.ok) { toast.error(data.message || 'Error', { id: toastId }); return }
@@ -187,7 +192,7 @@ export default function Cart() {
         body: JSON.stringify({
           cartItems,
           customer,
-          total: total.toFixed(2),
+          promoCode: promo?.code,
           codInfo: codForm,
         })
       })
@@ -338,6 +343,19 @@ export default function Cart() {
                   🔒 Secure checkout via <strong>CMI Interbank</strong>
                 </div>
 
+                <div className="cart__terms-checkbox" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.8rem', color: 'var(--grey)' }}>
+                  <input 
+                    type="checkbox" 
+                    id="terms-agree" 
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    style={{ marginTop: '0.2rem', accentColor: 'var(--cyan)' }}
+                  />
+                  <label htmlFor="terms-agree">
+                    J'ai lu et j'accepte les <Link to="/terms" target="_blank" style={{ color: 'var(--cyan)', textDecoration: 'underline' }}>conditions générales de vente</Link>.
+                  </label>
+                </div>
+
                 {/* Payment method selector */}
                 <div className="cart__pay-methods">
                   <button className="btn-primary cart__checkout" onClick={handleCheckout}>
@@ -347,6 +365,10 @@ export default function Cart() {
                   <button
                     className="cart__cod-btn"
                     onClick={() => {
+                      if (!agreedToTerms) {
+                        toast.error('Veuillez accepter les conditions générales de vente.')
+                        return
+                      }
                       if (!customer.name || !customer.email) {
                         toast.error('Please fill in your name and email first')
                         return

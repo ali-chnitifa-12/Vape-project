@@ -15,12 +15,43 @@ export default function Contact() {
     return () => ctx.revert()
   }, [])
 
-  const handleSubmit = (e) => {
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    gsap.to('.contact__form', {
-      scale: 0.98, duration: 0.1, yoyo: true, repeat: 1,
-      onComplete: () => setSent(true),
-    })
+    setLoading(true)
+    
+    try {
+      const response = await fetch('https://formsubmit.co/ajax/alichnitifa30@gmail.com', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          ...form,
+          _subject: form.subject || 'New Contact Form Submission',
+          _captcha: 'false',
+          _template: 'box'
+        })
+      })
+
+      const data = await response.json()
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Failed to send message')
+      }
+
+      gsap.to('.contact__form', {
+        scale: 0.98, duration: 0.1, yoyo: true, repeat: 1,
+        onComplete: () => setSent(true),
+      })
+    } catch (error) {
+      console.error('Contact error:', error)
+      alert('Failed to send message. Please try again later.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -73,8 +104,8 @@ export default function Contact() {
                     <textarea className="input-field contact__textarea" placeholder="Tell us more..." rows="6" required
                       value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
                   </div>
-                  <button type="submit" className="btn-primary contact__submit">
-                    <span>Send Message</span><span>→</span>
+                  <button type="submit" className="btn-primary contact__submit" disabled={loading}>
+                    <span>{loading ? 'Sending...' : 'Send Message'}</span><span>→</span>
                   </button>
                 </form>
               )}

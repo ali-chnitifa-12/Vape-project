@@ -9,6 +9,7 @@ import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import pool from './db.js';
 import { buildCmiParams, verifyCmiCallback } from './cmi.js';
+import nodemailer from 'nodemailer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -540,6 +541,52 @@ app.post('/api/reviews', async (req, res) => {
   } catch (err) {
     console.error('POST /api/reviews:', err.message);
     res.status(500).json({ message: 'Database error', error: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// CONTACT FORM
+// ═══════════════════════════════════════════════════════════
+
+app.post('/api/contact', async (req, res) => {
+  const { name, email, subject, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ message: 'Name, email, and message are required' });
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER || 'alichnitifa30@gmail.com',
+        pass: process.env.EMAIL_PASS // The user will need to configure this app password in .env
+      }
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER || 'alichnitifa30@gmail.com',
+      to: 'alichnitifa30@gmail.com', // Always send to this email
+      subject: `New Contact Form Submission: ${subject || 'No Subject'}`,
+      text: `You have received a new message from the contact form.\n\nName: ${name}\nEmail: ${email}\nSubject: ${subject}\n\nMessage:\n${message}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; border: 1px solid #ddd; border-radius: 8px;">
+          <h2 style="color: #333;">New Contact Form Message</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Subject:</strong> ${subject || 'No Subject'}</p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+          <h3 style="color: #555;">Message:</h3>
+          <p style="white-space: pre-wrap; color: #444;">${message}</p>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ message: 'Email sent successfully' });
+  } catch (err) {
+    console.error('POST /api/contact Error:', err.message);
+    res.status(500).json({ message: 'Failed to send email', error: err.message });
   }
 });
 

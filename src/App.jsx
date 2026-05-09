@@ -14,6 +14,7 @@ import Contact from './pages/Contact'
 import Cart from './pages/Cart'
 import Admin from './pages/Admin'
 import OrderConfirm from './pages/OrderConfirm'
+import Terms from './pages/Terms'
 import AgeVerification from './components/AgeVerification'
 import SmokeAnimation from './components/SmokeAnimation'
 import WhatsAppBubble from './components/WhatsAppBubble'
@@ -101,6 +102,7 @@ export default function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/order/:orderId" element={<OrderConfirm />} />
             <Route path="/payment/success" element={<OrderConfirm />} />
             <Route path="/payment/fail"    element={<OrderConfirm />} />
