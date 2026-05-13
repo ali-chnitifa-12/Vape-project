@@ -10,13 +10,13 @@ const VapeModel = () => {
       
       {/* Professional Smoke System */}
       <div className="vape-smoke-minimal">
-        {[...Array(12)].map((_, i) => (
+        {[...Array(20)].map((_, i) => (
           <div 
             key={i} 
             className="smoke-p" 
             style={{ 
-              '--delay': `${i * 0.8}s`,
-              '--x': `${(Math.random() - 0.5) * 50}px`
+              '--delay': `${i * 0.4}s`,
+              '--x': `${(Math.random() - 0.5) * 60}px`
             }} 
           />
         ))}
