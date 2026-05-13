@@ -4,7 +4,18 @@ import './Terms.css'
 
 export default function Terms() {
   useEffect(() => {
-    window.scrollTo(0, 0)
+    const hash = window.location.hash
+    if (hash) {
+      const el = document.querySelector(hash)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' })
+      } else {
+        window.scrollTo(0, 0)
+      }
+    } else {
+      window.scrollTo(0, 0)
+    }
+
     gsap.fromTo('.terms-container', 
       { opacity: 0, y: 30 }, 
       { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }
@@ -20,7 +31,7 @@ export default function Terms() {
 
       <div className="container">
         <div className="terms-container">
-          <h1 className="terms-title">Conditions <span className="gradient-text">Générales</span></h1>
+          <h1 className="terms-title" id="terms">Conditions <span className="gradient-text">Générales</span></h1>
           
           <div className="terms-content">
             <h3>PRÉAMBULE</h3>
@@ -31,7 +42,7 @@ export default function Terms() {
               Le présent contrat est un contrat à distance qui a pour objet de définir les droits et obligations des parties dans le cadre de la vente des produits de la société GOOD VAPES sur Internet, par l'intermédiaire de la plate-forme sécurisée de paiement en ligne du Centre Monétique Interbancaire.
             </p>
 
-            <h3>ARTICLE 1 : L'ACHETEUR</h3>
+            <h3 id="age">ARTICLE 1 : L'ACHETEUR</h3>
             <p>L'acheteur doit être âgé d'au moins 18 ans et avoir la capacité juridique pour effectuer une commande sur le site.</p>
             <p>L'acheteur doit s'assurer que ses données personnelles de la rubrique « mon compte » sont exactes et complètes (notamment code d'accès et/ou téléphone). Le vendeur ne peut être tenu responsable de l'impossibilité de livrer la commande si les données de l'acheteur comportent une erreur ou sont incomplètes.</p>
             <p>Le vendeur se réserve le droit d'annuler une commande si un doute subsiste sur la bonne foi de l'acheteur.</p>
@@ -93,7 +104,7 @@ export default function Terms() {
             <p>En cas d'achats à titre professionnel, le vendeur n'encourra aucune responsabilité pour tous dommages indirects du fait des présentes, perte d'exploitation, perte de profit, perte de chance, dommages ou frais, qui pourraient survenir du fait de l'achat des produits.</p>
             <p>Le vendeur, dans le processus de vente en ligne, n'est tenu que par une obligation de moyens ; sa responsabilité ne pourra être engagée pour un dommage résultant de l'utilisation du réseau Internet tel que perte de données, intrusion, virus, rupture du service, ou autres problèmes involontaires.</p>
 
-            <h3>ARTICLE 12 : PROTECTION DES DONNÉES PERSONNELLES</h3>
+            <h3 id="privacy">ARTICLE 12 : PROTECTION DES DONNÉES PERSONNELLES</h3>
             <p>Le vendeur s'engage à ne pas divulguer à des tiers les informations que vous lui communiquez. Celles-ci restent confidentielles. Elles ne seront utilisées par nos services internes que pour le traitement de votre commande, et pour la communication.</p>
             <p>Le vendeur se réserve le droit d'implanter des cookies dans votre ordinateur lors des visites sur le site. Un cookie ne nous permet pas de vous identifier mais a pour objet de signaler votre précédente visite sur le site afin de nous aider à personnaliser le service qui vous est proposé.</p>
 

@@ -159,12 +159,13 @@
   gap: 1.5rem;
 }
 
-.footer__bottom-links a {
+.footer__bottom-link {
   color: var(--grey);
   transition: var(--transition);
+  text-decoration: none;
 }
 
-.footer__bottom-links a:hover {
+.footer__bottom-link:hover {
   color: var(--cyan);
 }
 

@@ -64,9 +64,9 @@ export default function Footer() {
         <div className="footer__bottom">
           <p>© 2026 Klawdz. All rights reserved.</p>
           <div className="footer__bottom-links">
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-            <a href="#">Age Verification</a>
+            <Link to="/terms#privacy" className="footer__bottom-link">Privacy</Link>
+            <Link to="/terms#terms" className="footer__bottom-link">Terms</Link>
+            <Link to="/terms#age" className="footer__bottom-link">Age Verification</Link>
           </div>
         </div>
       </div>
