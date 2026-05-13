@@ -9,9 +9,6 @@ export default function Cart() {
   const navigate = useNavigate()
   const [cartItems, setCartItems] = useState([])
   const [customer, setCustomer]   = useState({ name: '', email: '' })
-  const [showPayModal, setShowPayModal] = useState(false)
-  const [pendingOrderId, setPendingOrderId] = useState(null)
-  const [cardData, setCardData]   = useState({ number: '', expiry: '', cvv: '', holder: '' })
   const [paying, setPaying]       = useState(false)
 
   // COD state
@@ -72,89 +69,7 @@ export default function Cart() {
     : 0
   const total = subtotal + shipping - discount
 
-  // ── STEP 1: Validate and create PENDING order ──────────────────
-  const handleCheckout = async () => {
-    if (!agreedToTerms) {
-      toast.error('Veuillez accepter les conditions générales de vente.')
-      return
-    }
-    if (!customer.name || !customer.email) {
-      toast.error('Please fill in your name and email first')
-      return
-    }
-    const toastId = toast.loading('Preparing your order...')
-    try {
-      const res = await fetch('/api/payment/initiate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cartItems, customer, promoCode: promo?.code })
-      })
-      const data = await res.json()
-      if (!res.ok) { toast.error(data.message || 'Error', { id: toastId }); return }
 
-      if (data.mode === 'simulation') {
-        // Show our simulated CMI card modal
-        toast.dismiss(toastId)
-        setPendingOrderId(data.orderId)
-        setShowPayModal(true)
-      } else if (data.mode === 'cmi') {
-        // Real CMI → redirect to their payment page
-        toast.loading('Redirecting to CMI...', { id: toastId })
-        const form = document.createElement('form')
-        form.method = 'POST'
-        form.action = data.gatewayUrl
-        Object.entries(data.params).forEach(([k, v]) => {
-          const inp = document.createElement('input')
-          inp.type = 'hidden'; inp.name = k; inp.value = v
-          form.appendChild(inp)
-        })
-        document.body.appendChild(form)
-        form.submit()
-      }
-    } catch (err) {
-      toast.error('Connection error', { id: toastId })
-    }
-  }
-
-  // ── STEP 2: Simulate CMI card payment ─────────────────────────
-  const handleSimulatedPay = async (e) => {
-    e.preventDefault()
-    if (cardData.number.replace(/\s/g,'').length < 16) {
-      toast.error('Please enter a valid 16-digit card number'); return
-    }
-    if (!cardData.expiry || !cardData.cvv || !cardData.holder) {
-      toast.error('Please fill in all card details'); return
-    }
-
-    setPaying(true)
-    const toastId = toast.loading('Processing payment via CMI...')
-
-    // Simulate 2s processing delay
-    await new Promise(r => setTimeout(r, 2000))
-
-    // Mark the order as paid in DB
-    try {
-      await fetch(`/api/payment/simulate-confirm/${pendingOrderId}`, { method: 'POST' })
-    } catch (_) {}
-
-    toast.success('✅ Payment successful! Order confirmed.', { id: toastId })
-    clearCart()
-    setCartItems([])
-    setShowPayModal(false)
-    setPaying(false)
-    setCustomer({ name: '', email: '' })
-    setCardData({ number: '', expiry: '', cvv: '', holder: '' })
-
-    // Redirect to order confirmation page
-    navigate(`/order/${pendingOrderId}`)
-  }
-
-  // Format card number with spaces: 1234 5678 9012 3456
-  const formatCardNumber = (val) =>
-    val.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim()
-
-  const formatExpiry = (val) =>
-    val.replace(/\D/g, '').slice(0, 4).replace(/(\d{2})(\d)/, '$1/$2')
 
   // ── Promo code ────────────────────────────────────────────
   const handlePromoApply = async () => {
@@ -340,7 +255,7 @@ export default function Cart() {
                 </div>
 
                 <div style={{ fontSize: '0.75rem', color: 'var(--grey)', margin: '1rem 0', textAlign: 'center' }}>
-                  🔒 Secure checkout via <strong>CMI Interbank</strong>
+                  🔒 Secure checkout — <strong>Cash on Delivery</strong>
                 </div>
 
                 <div className="cart__terms-checkbox" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.8rem', color: 'var(--grey)' }}>
@@ -358,12 +273,8 @@ export default function Cart() {
 
                 {/* Payment method selector */}
                 <div className="cart__pay-methods">
-                  <button className="btn-primary cart__checkout" onClick={handleCheckout}>
-                    <span>💳 Pay with CMI</span><span>→</span>
-                  </button>
-                  <div className="cart__pay-divider"><span>or</span></div>
                   <button
-                    className="cart__cod-btn"
+                    className="btn-primary cart__checkout"
                     onClick={() => {
                       if (!agreedToTerms) {
                         toast.error('Veuillez accepter les conditions générales de vente.')
@@ -376,12 +287,7 @@ export default function Cart() {
                       setShowCodModal(true)
                     }}
                   >
-                    <span className="cart__cod-icon">🛵</span>
-                    <div>
-                      <span className="cart__cod-title">Cash on Delivery</span>
-                      <span className="cart__cod-sub">Payer à la livraison</span>
-                    </div>
-                    <span>→</span>
+                    <span>🛵 Checkout (COD)</span><span>→</span>
                   </button>
                 </div>
                 <Link to="/shop" className="cart__continue">← Continue Shopping</Link>
@@ -391,108 +297,7 @@ export default function Cart() {
         </div>
       </section>
 
-      {/* ── CMI Simulated Payment Modal ─────────────────────────── */}
-      {showPayModal && (
-        <div className="cmi-modal-overlay" onClick={() => !paying && setShowPayModal(false)}>
-          <div className="cmi-modal glass-card" onClick={e => e.stopPropagation()}>
-            {/* CMI Header */}
-            <div className="cmi-modal__header">
-              <div className="cmi-modal__logo">
-                <span className="cmi-modal__logo-text">CMI</span>
-                <span className="cmi-modal__logo-sub">Centre Monétique Interbancaire</span>
-              </div>
-              <div className="cmi-modal__secure">🔒 Paiement Sécurisé</div>
-            </div>
 
-            <div className="cmi-modal__amount">
-              Montant à payer: <strong className="gradient-text">${total.toFixed(2)}</strong>
-            </div>
-
-            {/* Card visual preview */}
-            <div className="cmi-card-preview">
-              <div className="cmi-card-preview__chip">▬▬</div>
-              <div className="cmi-card-preview__number">
-                {cardData.number || '•••• •••• •••• ••••'}
-              </div>
-              <div className="cmi-card-preview__bottom">
-                <div>
-                  <div className="cmi-card-preview__label">Titulaire</div>
-                  <div>{cardData.holder || 'VOTRE NOM'}</div>
-                </div>
-                <div>
-                  <div className="cmi-card-preview__label">Expire</div>
-                  <div>{cardData.expiry || 'MM/AA'}</div>
-                </div>
-              </div>
-            </div>
-
-            <form className="cmi-modal__form" onSubmit={handleSimulatedPay}>
-              <div className="form-group">
-                <label>Numéro de carte</label>
-                <input
-                  className="input-field"
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={19}
-                  placeholder="1234 5678 9012 3456"
-                  value={cardData.number}
-                  onChange={e => setCardData({...cardData, number: formatCardNumber(e.target.value)})}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Titulaire de la carte</label>
-                <input
-                  className="input-field"
-                  type="text"
-                  placeholder="MOHAMMED ALAMI"
-                  value={cardData.holder}
-                  onChange={e => setCardData({...cardData, holder: e.target.value.toUpperCase()})}
-                  required
-                />
-              </div>
-              <div className="cmi-modal__row">
-                <div className="form-group">
-                  <label>Date d'expiration</label>
-                  <input
-                    className="input-field"
-                    type="text"
-                    placeholder="MM/AA"
-                    maxLength={5}
-                    value={cardData.expiry}
-                    onChange={e => setCardData({...cardData, expiry: formatExpiry(e.target.value)})}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>CVV</label>
-                  <input
-                    className="input-field"
-                    type="password"
-                    placeholder="•••"
-                    maxLength={3}
-                    value={cardData.cvv}
-                    onChange={e => setCardData({...cardData, cvv: e.target.value.replace(/\D/g,'').slice(0,3)})}
-                    required
-                  />
-                </div>
-              </div>
-
-              <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem' }} disabled={paying}>
-                {paying ? <span>Traitement en cours...</span> : <><span>Confirmer le Paiement</span><span>→</span></>}
-              </button>
-              <button type="button" className="cart__continue" style={{ marginTop: '0.5rem', textAlign:'center', display:'block', width:'100%' }}
-                onClick={() => !paying && setShowPayModal(false)}>
-                Annuler
-              </button>
-            </form>
-
-            <div style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.7rem', color: 'var(--grey)' }}>
-              🛡️ Vos données sont chiffrées par SSL 256-bit
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── COD WhatsApp Modal ───────────────────────────────── */}
       {showCodModal && (

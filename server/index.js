@@ -8,7 +8,6 @@ import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import pool from './db.js';
-import { buildCmiParams, verifyCmiCallback } from './cmi.js';
 import nodemailer from 'nodemailer';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -249,175 +248,7 @@ async function calculateOrderTotal(conn, cartItems, promoCode) {
   return { total: Math.max(0, total), verifiedItems };
 }
 
-// ═══════════════════════════════════════════════════════════
-// CMI PAYMENT - Morocco
-// ═══════════════════════════════════════════════════════════
 
-/**
- * STEP 1: Frontend calls this to create the order and get CMI params.
- * Backend validates stock, saves a PENDING order, returns CMI params.
- * Frontend then builds a form and auto-submits it to CMI.
- */
-app.post('/api/payment/initiate', async (req, res) => {
-  const { cartItems, customer, promoCode } = req.body;
-  const conn = await pool.getConnection();
-
-  try {
-    await conn.beginTransaction();
-
-    // Securely calculate total
-    const { total: finalTotal, verifiedItems } = await calculateOrderTotal(conn, cartItems, promoCode);
-
-    // Create PENDING order
-    const orderId = Date.now();
-    await conn.execute(
-      'INSERT INTO orders (id, customerName, customerEmail, total, status) VALUES (?, ?, ?, ?, ?)',
-      [orderId, customer?.name || 'Guest', customer?.email || '', finalTotal, 'PENDING']
-    );
-
-    // Save order items
-    for (const item of verifiedItems) {
-      await conn.execute(
-        'INSERT INTO order_items (orderId, productId, name, price, qty) VALUES (?, ?, ?, ?, ?)',
-        [orderId, item.id, item.name, item.price, item.qty]
-      );
-    }
-
-    await conn.commit();
-    conn.release();
-
-    // Check if CMI credentials are configured
-    const cmiReady = process.env.CMI_CLIENT_ID !== 'YOUR_CLIENT_ID_HERE'
-                  && process.env.CMI_STORE_KEY  !== 'YOUR_STORE_KEY_HERE';
-
-    if (!cmiReady) {
-      // ─── SIMULATION MODE (no real CMI credentials yet) ───────────────
-      console.log('[CMI] Running in SIMULATION mode - credentials not set');
-      return res.json({
-        mode: 'simulation',
-        orderId,
-        message: 'CMI credentials not configured. Payment simulated.',
-      });
-    }
-
-    // ─── REAL CMI MODE ────────────────────────────────────────────────
-    const cmiParams = buildCmiParams({
-      orderId,
-      amount:        total,
-      customerEmail: customer?.email || '',
-      customerName:  customer?.name  || '',
-    });
-
-    res.json({
-      mode:       'cmi',
-      orderId,
-      gatewayUrl: process.env.CMI_BASE_URL,
-      params:     cmiParams,
-    });
-
-  } catch (err) {
-    await conn.rollback();
-    conn.release();
-    console.error('Payment initiate error:', err.message);
-    res.status(400).json({ message: err.message });
-  }
-});
-
-/**
- * STEP 2: CMI calls this URL after payment (server-to-server callback).
- * We verify the signature, then update stock and order status.
- * CMI expects us to respond with "ACTION=POSTAUTH" if approved.
- */
-app.post('/api/payment/callback', async (req, res) => {
-  const params = req.body;
-  console.log('[CMI Callback]', params);
-
-  try {
-    // Verify CMI signature
-    const valid = verifyCmiCallback(params, process.env.CMI_STORE_KEY);
-    if (!valid) {
-      console.error('[CMI] Invalid signature in callback!');
-      return res.send('APPROVED'); // CMI still expects APPROVED response
-    }
-
-    const orderId  = params.oid;
-    const response = params.Response || params.response || '';
-    const approved = response === 'Approved' || response === '00';
-
-    if (approved) {
-      const conn = await pool.getConnection();
-      try {
-        await conn.beginTransaction();
-
-        // Deduct stock
-        const [items] = await conn.execute(
-          'SELECT * FROM order_items WHERE orderId = ?', [orderId]
-        );
-        for (const item of items) {
-          await conn.execute(
-            `UPDATE products
-             SET stock = GREATEST(stock - ?, 0),
-                 outOfStock = IF(stock - ? <= 0, 1, 0)
-             WHERE id = ?`,
-            [item.qty, item.qty, item.productId]
-          );
-        }
-
-        // Mark order as paid
-        await conn.execute(
-          `UPDATE orders SET status = 'Paid (CMI)', authCode = ?, tranId = ? WHERE id = ?`,
-          [params.AUTH_CODE || '', params.TransId || '', orderId]
-        );
-
-        await conn.commit();
-        conn.release();
-        console.log(`[CMI] Order ${orderId} paid successfully`);
-      } catch (err) {
-        await conn.rollback();
-        conn.release();
-        console.error('[CMI] DB error during callback:', err.message);
-      }
-    } else {
-      // Payment rejected — mark order as failed
-      await pool.execute(
-        `UPDATE orders SET status = 'FAILED' WHERE id = ?`,
-        [orderId]
-      );
-      console.log(`[CMI] Order ${orderId} payment failed. Response: ${response}`);
-    }
-
-    // CMI requires this exact response to confirm we received the callback
-    res.send('APPROVED');
-
-  } catch (err) {
-    console.error('[CMI Callback] Error:', err.message);
-    res.send('APPROVED'); // always send APPROVED to avoid CMI retrying forever
-  }
-});
-
-/**
- * Simulation-only: mark a PENDING order as paid (used when CMI creds not set)
- */
-app.post('/api/payment/simulate-confirm/:orderId', async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const [items] = await pool.execute('SELECT * FROM order_items WHERE orderId = ?', [orderId]);
-    for (const item of items) {
-      await pool.execute(
-        `UPDATE products SET stock = GREATEST(stock - ?, 0), outOfStock = IF(stock - ? <= 0, 1, 0) WHERE id = ?`,
-        [item.qty, item.qty, item.productId]
-      );
-    }
-    await pool.execute(
-      `UPDATE orders SET status = 'Paid (CMI - Simulated)' WHERE id = ?`, [orderId]
-    );
-    console.log(`[SIM] Order ${orderId} confirmed as paid`);
-    res.json({ message: 'Order confirmed' });
-  } catch (err) {
-    console.error('simulate-confirm error:', err.message);
-    res.status(500).json({ message: err.message });
-  }
-});
 
 // ═══════════════════════════════════════════════════════════
 // COD ORDERS — log when customer submits WhatsApp form
@@ -603,9 +434,6 @@ async function startServer() {
     app.listen(PORT, () => {
       console.log(`\n🚀 Server running → http://localhost:${PORT}`);
       console.log(`🗄️  MySQL database → ${process.env.DB_NAME || 'vape-store'}`);
-
-      const cmiReady = process.env.CMI_CLIENT_ID !== 'YOUR_CLIENT_ID_HERE';
-      console.log(`💳 CMI Gateway    → ${cmiReady ? '✅ CONFIGURED' : '⚠️  SIMULATION MODE (add credentials to .env)'}`);
     });
   } catch (err) {
     console.error('❌ Failed to connect to MySQL:', err.message);

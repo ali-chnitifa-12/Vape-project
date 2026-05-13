@@ -1,0 +1,366 @@
+:root {
+  --vape-copper: #d48e6c;
+  --vape-copper-dark: #b56b4d;
+  --vape-black: #121212;
+  --vape-leather: #1a1a1a;
+  --vape-accent: #ff9d6e;
+}
+
+.vape-container {
+  position: relative;
+  width: 250px;
+  height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1500px;
+}
+
+.vape-rotation-wrapper {
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  animation: rotate-3d 12s linear infinite;
+}
+
+.vape-3d {
+  position: relative;
+  width: 110px;
+  height: 350px;
+  margin: 0 auto;
+  transform-style: preserve-3d;
+}
+
+/* Mod Body */
+.mod-body {
+  position: absolute;
+  bottom: 0;
+  width: 110px;
+  height: 220px;
+  transform-style: preserve-3d;
+}
+
+.mod-side {
+  position: absolute;
+  background: var(--vape-black);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mod-side.front {
+  width: 110px;
+  height: 220px;
+  transform: translateZ(35px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 15px;
+  background: linear-gradient(to bottom, #1a1a1a, #0a0a0a);
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-image: linear-gradient(to bottom, var(--vape-copper), #5d3a2a, var(--vape-copper)) 1;
+  border-radius: 8px;
+  box-shadow: inset 0 0 15px rgba(212, 142, 108, 0.1);
+}
+
+.mod-side.back {
+  width: 110px;
+  height: 220px;
+  transform: translateZ(-35px) rotateY(180deg);
+  border-radius: 8px;
+  background: radial-gradient(circle at center, #222 0%, #111 100%);
+  border: 1px solid #333;
+}
+
+.mod-side.left {
+  width: 70px;
+  height: 220px;
+  left: 20px;
+  transform: translateX(-55px) rotateY(-90deg);
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid #333;
+}
+
+.mod-side.right {
+  width: 70px;
+  height: 220px;
+  left: 20px;
+  transform: translateX(55px) rotateY(90deg);
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #333;
+}
+
+.side-panel {
+  width: 85%;
+  height: 92%;
+  border: 2px solid var(--vape-copper);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 0 15px rgba(212, 142, 108, 0.2);
+  position: relative;
+}
+
+.side-panel::before {
+  content: '';
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  width: 90%;
+  height: 90%;
+  border: 1px solid rgba(212, 142, 108, 0.1);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.side-logo {
+  color: var(--vape-copper);
+  font-family: 'Georgia', serif;
+  font-size: 3rem;
+  font-weight: 900;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 20px rgba(212, 142, 108, 0.3);
+  letter-spacing: -2px;
+}
+
+.mod-side.top {
+  width: 110px;
+  height: 70px;
+  top: -35px;
+  transform: translateY(35px) rotateX(90deg);
+  background: var(--vape-copper);
+  border-radius: 5px;
+}
+
+.mod-side.bottom {
+  width: 110px;
+  height: 70px;
+  bottom: -35px;
+  transform: translateY(-35px) rotateX(-90deg);
+  background: var(--vape-copper);
+  border-radius: 5px;
+}
+
+/* UI Elements */
+.fire-btn {
+  width: 45px;
+  height: 45px;
+  background: radial-gradient(circle, #333, #111);
+  border: 2px solid var(--vape-copper);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+}
+
+.vape-button-pair {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.vape-button.small {
+  width: 25px;
+  height: 18px;
+  background: #222;
+  border: 1px solid var(--vape-copper);
+  color: var(--vape-copper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  border-radius: 4px;
+}
+
+.vape-screen-pro {
+  width: 80px;
+  height: 110px;
+  background: #000;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.screen-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.5rem;
+  color: #00d4ff;
+  border-bottom: 1px solid #222;
+  padding-bottom: 2px;
+}
+
+.main-wattage {
+  font-size: 1.4rem;
+  font-weight: bold;
+  text-align: center;
+  margin: 5px 0;
+}
+
+.main-wattage span {
+  font-size: 0.8rem;
+  margin-left: 2px;
+}
+
+.detailed-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.45rem;
+  color: #aaa;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.stat-row span:last-child {
+  color: #fff;
+}
+
+.battery-level {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.5rem;
+}
+
+.battery-icon {
+  width: 15px;
+  height: 8px;
+  border: 1px solid #fff;
+  position: relative;
+}
+
+.battery-icon::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 78%;
+  background: #00ff00;
+}
+
+.vape-port {
+  width: 20px;
+  height: 8px;
+  background: #222;
+  border-radius: 2px;
+  margin-top: 10px;
+  border: 1px solid #444;
+}
+
+/* Tank Section */
+.tank {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 100px;
+  transform-style: preserve-3d;
+}
+
+.tank-base {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 20px;
+  background: var(--vape-copper);
+  border-radius: 4px;
+}
+
+.tank-glass.bulb {
+  position: absolute;
+  bottom: 20px;
+  left: 5%;
+  width: 90%;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  backdrop-filter: blur(2px);
+}
+
+.tank-internal-coil {
+  position: absolute;
+  bottom: 20px;
+  left: 30%;
+  width: 40%;
+  height: 50px;
+  background: linear-gradient(to right, #444, #888, #444);
+  border-radius: 5px;
+}
+
+.drip-tip-base {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 15px;
+  background: var(--vape-copper);
+  border-radius: 4px;
+}
+
+.drip-tip {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 25px;
+  background: #111;
+  border: 2px solid var(--vape-copper-dark);
+  border-radius: 4px;
+  background-image: repeating-linear-gradient(45deg, #111, #111 2px, #222 2px, #222 4px);
+}
+
+/* Smoke System */
+.vape-smoke {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 100px;
+  pointer-events: none;
+}
+
+.smoke-particle {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: var(--size);
+  height: var(--size);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(10px);
+  opacity: 0;
+  animation: smoke-rise 5s ease-out infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes smoke-rise {
+  0% { transform: translateY(0) scale(0.5); opacity: 0; }
+  15% { opacity: 0.4; }
+  100% { transform: translateY(-200px) scale(4); opacity: 0; }
+}
+
+@keyframes rotate-3d {
+  from { transform: rotateY(0deg) rotateX(5deg); }
+  to { transform: rotateY(360deg) rotateX(5deg); }
+}

@@ -47,7 +47,7 @@
   margin-top: 0.5rem;
 }
 
-/* Hero visual - animated vape device */
+/* Hero visual - the 3D Vape Model is now handled by VapeModel component */
 .hero__visual {
   position: relative;
   display: flex;
@@ -81,63 +81,6 @@
   border-radius: 50%;
   filter: blur(40px);
   animation: float 6s ease-in-out infinite;
-}
-
-.hero__device-body {
-  position: relative;
-  width: 120px;
-  height: 280px;
-  background: linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%);
-  border-radius: 20px;
-  border: 1px solid rgba(123, 47, 255, 0.3);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 2rem;
-  box-shadow: 0 0 60px rgba(123, 47, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.05);
-  animation: float 6s ease-in-out infinite;
-}
-
-.hero__device-screen {
-  width: 70px;
-  height: 40px;
-  background: linear-gradient(135deg, var(--purple), var(--cyan));
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  color: #fff;
-  box-shadow: 0 0 20px rgba(123, 47, 255, 0.5);
-}
-
-.hero__device-vapor {
-  position: absolute;
-  top: -40px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 100px;
-}
-
-.vapor-particle {
-  position: absolute;
-  bottom: 0;
-  width: 8px;
-  height: 8px;
-  background: rgba(123, 47, 255, 0.4);
-  border-radius: 50%;
-  filter: blur(4px);
-  animation: vapor-rise 2.5s ease-out infinite;
-}
-
-@keyframes vapor-rise {
-  0% { opacity: 0.6; transform: translateY(0) scale(1); }
-  50% { opacity: 0.3; }
-  100% { opacity: 0; transform: translateY(-80px) scale(3); }
 }
 
 /* Hero stats */

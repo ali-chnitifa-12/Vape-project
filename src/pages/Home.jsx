@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import ProductCard from '../components/ProductCard'
+import VapeModel from '../components/VapeModel'
 import { applySavedOrder } from '../utils/productOrder'
 import './Home.css'
 
@@ -106,16 +107,7 @@ export default function Home() {
             <div className="hero__visual-ring hero__visual-ring--2" />
             <div className="hero__visual-glow" />
             <div className="hero__visual-device">
-              <div className="hero__device-body">
-                <div className="hero__device-screen">
-                  <span>KLAWDZ</span>
-                </div>
-                <div className="hero__device-vapor">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="vapor-particle" style={{ animationDelay: `${i * 0.3}s`, left: `${20 + i * 10}%` }} />
-                  ))}
-                </div>
-              </div>
+              <VapeModel />
             </div>
           </div>
         </div>
