@@ -299,20 +299,51 @@
 }
 
 @media (max-width: 768px) {
+  .product-detail {
+    padding-top: 6rem;
+  }
+  .product-detail__breadcrumb {
+    margin-bottom: 2rem;
+  }
   .product-detail__grid {
     grid-template-columns: 1fr;
     gap: 2rem;
+  }
+  .product-detail__image {
+    max-height: 350px;
+  }
+  .product-detail__name {
+    font-size: 2.2rem;
+    text-align: center;
+  }
+  .product-detail__price-row {
+    justify-content: center;
   }
   .product-detail__specs-grid {
     grid-template-columns: 1fr;
   }
   .product-detail__actions {
     flex-direction: column;
+    gap: 1.2rem;
+  }
+  .product-detail__qty {
+    width: 100%;
+    justify-content: center;
   }
   .product-detail__add {
     width: 100%;
+    padding: 1.2rem;
   }
   .featured__grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-detail__image {
+    max-height: 280px;
+  }
+  .product-detail__name {
+    font-size: 1.8rem;
   }
 }

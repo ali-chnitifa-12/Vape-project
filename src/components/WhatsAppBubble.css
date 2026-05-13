@@ -119,7 +119,24 @@
 }
 
 @media (max-width: 480px) {
-  .wa-bubble-wrapper { bottom: 18px; right: 16px; }
+  .wa-bubble-wrapper { 
+    bottom: 14px; 
+    right: 14px; 
+    gap: 6px;
+  }
   .wa-label { display: none; }
-  .wa-bubble { border-radius: 50%; padding: 0.9rem; }
+  .wa-bubble { 
+    padding: 0.7rem; 
+    border-radius: 50%;
+    box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+  }
+  .wa-icon {
+    width: 20px;
+    height: 20px;
+  }
+  .wa-tooltip {
+    max-width: 180px;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.75rem;
+  }
 }

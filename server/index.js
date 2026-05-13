@@ -297,7 +297,7 @@ app.post('/api/orders/cod', codRateLimiter, async (req, res) => {
     await conn.commit();
     conn.release();
 
-    console.log(`[COD] Order #${orderId} logged — ${custName} — ${total} MAD`);
+    console.log(`[COD] Order #${orderId} logged — ${custName} — ${finalTotal} MAD`);
     res.status(201).json({ orderId, message: 'COD order logged' });
   } catch (err) {
     await conn.rollback();
