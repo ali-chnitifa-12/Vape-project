@@ -18,6 +18,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  will-change: transform;
 }
 
 .vape-rotating-photo img {
@@ -31,6 +32,8 @@
   -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 75%);
   mask-image: radial-gradient(ellipse at center, black 40%, transparent 75%);
   pointer-events: none;
+  /* GPU acceleration */
+  will-change: filter, transform;
 }
 
 @keyframes rotate-360-pure {
@@ -62,6 +65,7 @@
   opacity: 0;
   animation: smoke-up-thick 6s ease-out infinite;
   animation-delay: var(--delay);
+  will-change: transform, opacity;
 }
 
 @keyframes smoke-up-thick {

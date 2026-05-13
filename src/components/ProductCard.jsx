@@ -51,7 +51,7 @@ export default function ProductCard({ product, index }) {
       </div>
       <div className="product-card__image">
         <div className="product-card__image-bg" style={{ background: `radial-gradient(circle, ${product.color}22, transparent)` }} />
-        <img src={product.image} alt={product.name} />
+        <img src={product.image} alt={product.name} loading="lazy" />
       </div>
       <div className="product-card__info">
         <span className="product-card__category">{product.category}</span>
