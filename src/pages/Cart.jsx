@@ -115,25 +115,32 @@ export default function Cart() {
 
     // 2. Build WhatsApp message
     const itemLines = cartItems
-      .map(i => `  • ${i.name} x${i.qty} — ${(i.price * i.qty).toFixed(2)} MAD`)
-      .join('%0A')
-    const discountLine = promo ? `%0A🏷️ *Promo (${promo.code}):* -${discount.toFixed(2)} MAD` : ''
-    const msg =
-      `🛵 *Nouvelle commande COD*%0A` +
-      `───────────────────%0A` +
-      `👤 *Nom:* ${codForm.name}%0A` +
-      `📞 *Téléphone:* ${codForm.phone}%0A` +
-      `🏙️ *Ville:* ${codForm.city}%0A` +
-      `📍 *Adresse:* ${codForm.address}%0A` +
-      `───────────────────%0A` +
-      `🛒 *Articles:*%0A${itemLines}%0A` +
-      `───────────────────%0A` +
-      `💰 *Sous-total:* ${subtotal.toFixed(2)} MAD%0A` +
-      `🚚 *Livraison:* ${shipping === 0 ? 'GRATUITE' : shipping + ' MAD'}` +
-      discountLine + `%0A` +
-      `✅ *TOTAL: ${total.toFixed(2)} MAD*`
+      .map(i => `📦 *[#${i.id}] ${i.name}*%0A      *Qty:* ${i.qty} — ${(i.price * i.qty).toFixed(2)} MAD`)
+      .join('%0A%0A')
 
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank')
+    const promoSection = promo 
+      ? `%0A🏷️ *PROMO:* -${discount.toFixed(2)} MAD (${promo.code})` 
+      : ''
+
+    const messageTemplate = `🔥 *NOUVELLE COMMANDE - KLAWDZ* 🔥%0A` +
+      `━━━━━━━━━━━━━━━━━━━━━━%0A` +
+      `👤 *CLIENT*%0A` +
+      `• *Nom:* ${codForm.name}%0A` +
+      `• *Tél:* ${codForm.phone}%0A` +
+      `• *Ville:* ${codForm.city}%0A` +
+      `• *Adresse:* ${codForm.address}%0A` +
+      `━━━━━━━━━━━━━━━━━━━━━━%0A` +
+      `🛒 *ARTICLES*%0A%0A${itemLines}%0A` +
+      `━━━━━━━━━━━━━━━━━━━━━━%0A` +
+      `💰 *RÉSUMÉ*%0A` +
+      `• *Sous-total:* ${subtotal.toFixed(2)} MAD%0A` +
+      `• *Livraison:* ${shipping === 0 ? 'GRATUITE' : shipping + ' MAD'}` +
+      `${promoSection}%0A%0A` +
+      `⭐ *TOTAL À PAYER: ${total.toFixed(2)} MAD*%0A` +
+      `━━━━━━━━━━━━━━━━━━━━━━%0A` +
+      `💬 _Merci de votre confiance !_`
+
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${messageTemplate}`, '_blank')
     setShowCodModal(false)
     setCodForm({ name: '', phone: '', city: '', zip: '', address: '' })
   }

@@ -343,6 +343,18 @@ app.get('/api/orders', authMiddleware, async (req, res) => {
   }
 });
 
+app.put('/api/orders/:id/status', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    await pool.execute('UPDATE orders SET status = ? WHERE id = ?', [status, id]);
+    res.json({ message: 'Status updated' });
+  } catch (err) {
+    console.error('PUT /api/orders/:id/status:', err.message);
+    res.status(500).json({ message: 'Database error', error: err.message });
+  }
+});
+
 // ═══════════════════════════════════════════════════════════
 // REVIEWS
 // ═══════════════════════════════════════════════════════════

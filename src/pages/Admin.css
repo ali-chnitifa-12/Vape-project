@@ -140,6 +140,41 @@
 .status-in  { background: rgba(0,255,170,.15); color: #00ffaa; border: 1px solid rgba(0,255,170,.2); }
 .status-out { background: rgba(255,42,95,.15);  color: #ff2a5f; border: 1px solid rgba(255,42,95,.2); }
 
+.status-select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--white);
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  outline: none;
+  font-family: var(--font-display);
+}
+
+.status-select.pending {
+  color: #ff2a5f;
+  background: rgba(255, 42, 95, 0.1);
+  border-color: rgba(255, 42, 95, 0.3);
+}
+
+.status-select.sold {
+  color: #00ffaa;
+  background: rgba(0, 255, 170, 0.1);
+  border-color: rgba(0, 255, 170, 0.3);
+}
+
+.status-select:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.status-select option {
+  background: #1a1a1a;
+  color: #fff;
+}
+
 .actions-cell { display: flex; gap: 0.5rem; }
 
 .btn-edit,

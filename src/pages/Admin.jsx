@@ -120,7 +120,7 @@ export default function Admin() {
   const analytics = useMemo(() => {
     if (!orders.length) return null;
 
-    const paid = orders.filter(o => o.status !== 'cancelled');
+    const paid = orders.filter(o => o.status?.toLowerCase().includes('sol') || o.status?.toLowerCase().includes('paid') || o.status?.toLowerCase().includes('complete'));
 
     // total revenue
     const totalRevenue = paid.reduce((s, o) => s + parseFloat(o.total || 0), 0);
@@ -243,6 +243,30 @@ export default function Admin() {
       fetchProducts();
     } catch (err) {
       toast.error(`Error: ${err.message}`, { id: tId });
+    }
+  };
+
+  /* ── order status update ───────────────────────────────── */
+  const handleStatusUpdate = async (orderId, newStatus) => {
+    const tId = toast.loading('Updating status...');
+    try {
+      const res = await fetch(`/api/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.status === 401 || res.status === 403) {
+        toast.dismiss(tId);
+        return handleLogout();
+      }
+      if (!res.ok) throw new Error('Failed to update status');
+      toast.success('Status updated', { id: tId });
+      fetchOrders();
+    } catch (err) {
+      toast.error(err.message, { id: tId });
     }
   };
 
@@ -498,11 +522,11 @@ export default function Admin() {
                 <div className="status-breakdown">
                   {analytics ? Object.entries(analytics.byStatus).map(([status, count]) => (
                     <div key={status} className="status-row">
-                      <span className={`status-badge status-${status === 'paid' ? 'in' : 'out'}`}>{status}</span>
+                      <span className={`status-badge ${status.toLowerCase().includes('pending') ? 'status-out' : 'status-in'}`}>{status}</span>
                       <div className="status-bar-wrap">
                         <div className="status-bar" style={{
                           width: `${(count / orders.length) * 100}%`,
-                          background: status === 'paid' ? '#00e676' : status === 'pending' ? '#ffba00' : '#ff2a5f'
+                          background: status.toLowerCase().includes('pending') ? '#ff2a5f' : '#00ffaa'
                         }} />
                       </div>
                       <span className="status-count">{count}</span>
@@ -647,7 +671,14 @@ export default function Admin() {
                       </td>
                       <td style={{ color: 'var(--cyan)', fontWeight: 700 }}>{order.total} MAD</td>
                       <td>
-                        <span className={`status-badge ${order.status === 'paid' ? 'status-in' : 'status-out'}`}>{order.status}</span>
+                        <select 
+                          className={`status-select ${order.status?.toLowerCase().includes('pending') ? 'pending' : 'sold'}`}
+                          value={order.status?.toLowerCase().includes('pending') ? 'PENDING' : 'SOLED'}
+                          onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
+                        >
+                          <option value="PENDING">PENDING</option>
+                          <option value="SOLED">SOLED</option>
+                        </select>
                       </td>
                     </tr>
                   ))}
