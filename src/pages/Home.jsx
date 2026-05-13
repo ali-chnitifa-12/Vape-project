@@ -4,6 +4,7 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import ProductCard from '../components/ProductCard'
 import VapeModel from '../components/VapeModel'
+
 import { applySavedOrder } from '../utils/productOrder'
 import './Home.css'
 
